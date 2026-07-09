@@ -1,0 +1,11 @@
+{
+  "extends": ["eslint:recommended", "plugin:react/recommended", "prettier"],
+  "plugins": ["react", "prettier"],
+  "rules": {
+    "prettier/prettier": "error",
+    "react/react-in-jsx-scope": "off",
+    "no-unused-vars": "warn"
+  },
+  "env": { "browser": true, "es2021": true },
+  "settings": { "react": { "version": "detect" } }
+}
