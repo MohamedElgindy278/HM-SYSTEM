@@ -1,7 +1,9 @@
 from datetime import date
+from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Query
 
+from src.core.deps import require_permission
 from src.core.responses import Responses
 from src.schemas.appointment_schema import (
     AppointmentCreateSchema,
@@ -19,17 +21,14 @@ router = APIRouter(
 # ==========================
 
 
-@router.get("/available-slots")
-def get_available_slots(
-    doctor_id: int,
-    appointment_date: date,
-):
+@router.get(
+    "/available-slots",
+    dependencies=[Depends(require_permission("appointment:read"))],
+)
+def get_available_slots(doctor_id: int, appointment_date: date):
 
     return Responses.ok(
-        data=AppointmentService.get_available_slots(
-            doctor_id,
-            appointment_date,
-        ),
+        data=AppointmentService.get_available_slots(doctor_id, appointment_date),
     )
 
 
@@ -38,18 +37,16 @@ def get_available_slots(
 # ==========================
 
 
-@router.post("")
-def create_appointment(
-    appointment_data: AppointmentCreateSchema,
-):
+@router.post(
+    "",
+    status_code=201,
+    dependencies=[Depends(require_permission("appointment:create"))],
+)
+def create_appointment(appointment_data: AppointmentCreateSchema):
 
-    AppointmentService.create_appointment(
-        appointment_data,
-    )
+    AppointmentService.create_appointment(appointment_data)
 
-    return Responses.ok(
-        message="Appointment created successfully",
-    )
+    return Responses.created(message="Appointment created successfully")
 
 
 # ==========================
@@ -57,23 +54,41 @@ def create_appointment(
 # ==========================
 
 
-@router.get("")
-def get_all_appointments():
-
-    return Responses.ok(
-        data=AppointmentService.get_all_appointments(),
-    )
-
-
-@router.get("/{appointment_id}")
-def get_appointment_by_id(
-    appointment_id: int,
+@router.get(
+    "",
+    dependencies=[Depends(require_permission("appointment:read"))],
+)
+def get_all_appointments(
+    start_num: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    doctor_id: Optional[int] = Query(default=None),
+    patient_id: Optional[int] = Query(default=None),
+    status: Optional[str] = Query(default=None),
+    from_date: Optional[date] = Query(default=None),
+    to_date: Optional[date] = Query(default=None),
 ):
 
     return Responses.ok(
-        data=AppointmentService.get_appointment_by_id(
-            appointment_id,
+        data=AppointmentService.get_all_appointments(
+            start_num,
+            page_size,
+            doctor_id,
+            patient_id,
+            status,
+            from_date,
+            to_date,
         ),
+    )
+
+
+@router.get(
+    "/{appointment_id}",
+    dependencies=[Depends(require_permission("appointment:read"))],
+)
+def get_appointment_by_id(appointment_id: int):
+
+    return Responses.ok(
+        data=AppointmentService.get_appointment_by_id(appointment_id),
     )
 
 
@@ -82,20 +97,15 @@ def get_appointment_by_id(
 # ==========================
 
 
-@router.put("/{appointment_id}")
-def update_appointment(
-    appointment_id: int,
-    appointment_data: AppointmentUpdateSchema,
-):
+@router.put(
+    "/{appointment_id}",
+    dependencies=[Depends(require_permission("appointment:update"))],
+)
+def update_appointment(appointment_id: int, appointment_data: AppointmentUpdateSchema):
 
-    AppointmentService.update_appointment(
-        appointment_id,
-        appointment_data,
-    )
+    AppointmentService.update_appointment(appointment_id, appointment_data)
 
-    return Responses.ok(
-        message="Appointment updated successfully",
-    )
+    return Responses.ok(message="Appointment updated successfully")
 
 
 # ==========================
@@ -103,18 +113,15 @@ def update_appointment(
 # ==========================
 
 
-@router.put("/{appointment_id}/cancel")
-def cancel_appointment(
-    appointment_id: int,
-):
+@router.put(
+    "/{appointment_id}/cancel",
+    dependencies=[Depends(require_permission("appointment:cancel"))],
+)
+def cancel_appointment(appointment_id: int):
 
-    AppointmentService.cancel_appointment(
-        appointment_id,
-    )
+    AppointmentService.cancel_appointment(appointment_id)
 
-    return Responses.ok(
-        message="Appointment cancelled successfully",
-    )
+    return Responses.ok(message="Appointment cancelled successfully")
 
 
 # ==========================
@@ -122,15 +129,12 @@ def cancel_appointment(
 # ==========================
 
 
-@router.put("/{appointment_id}/complete")
-def complete_appointment(
-    appointment_id: int,
-):
+@router.put(
+    "/{appointment_id}/complete",
+    dependencies=[Depends(require_permission("appointment:complete"))],
+)
+def complete_appointment(appointment_id: int):
 
-    AppointmentService.complete_appointment(
-        appointment_id,
-    )
+    AppointmentService.complete_appointment(appointment_id)
 
-    return Responses.ok(
-        message="Appointment completed successfully",
-    )
+    return Responses.ok(message="Appointment completed successfully")

@@ -1,4 +1,5 @@
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from fastapi import status
 
 # ==========================================================
@@ -15,7 +16,7 @@ class AppResponse:
             content={
                 "status_code": status_code,
                 "message": message,
-                "data": data,
+                "data": jsonable_encoder(data),
             },
         )
 
@@ -29,32 +30,16 @@ class Responses:
 
     @staticmethod
     def ok(data=None, message: str = "Success"):
-        return AppResponse.send(
-            status.HTTP_200_OK,
-            message,
-            data,
-        )
+        return AppResponse.send(status.HTTP_200_OK, message, data)
 
     @staticmethod
     def created(data=None, message: str = "Created successfully"):
-        return AppResponse.send(
-            status.HTTP_201_CREATED,
-            message,
-            data,
-        )
+        return AppResponse.send(status.HTTP_201_CREATED, message, data)
 
     @staticmethod
     def accepted(data=None, message: str = "Request accepted"):
-        return AppResponse.send(
-            status.HTTP_202_ACCEPTED,
-            message,
-            data,
-        )
+        return AppResponse.send(status.HTTP_202_ACCEPTED, message, data)
 
     @staticmethod
     def deleted(message: str = "Deleted successfully"):
-        return AppResponse.send(
-            status.HTTP_200_OK,
-            message,
-            None,
-        )
+        return AppResponse.send(status.HTTP_200_OK, message, None)

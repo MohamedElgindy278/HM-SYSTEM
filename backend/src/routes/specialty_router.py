@@ -1,5 +1,8 @@
-from fastapi import APIRouter
+from typing import Optional
 
+from fastapi import APIRouter, Depends, Query
+
+from src.core.deps import require_permission
 from src.core.responses import Responses
 from src.schemas.specialty_schema import (
     SpecialtyCreateSchema,
@@ -17,16 +20,16 @@ router = APIRouter(
 # ==========================
 
 
-@router.post("/")
+@router.post(
+    "",
+    status_code=201,
+    dependencies=[Depends(require_permission("specialty:create"))],
+)
 def create_specialty(specialty_data: SpecialtyCreateSchema):
 
-    SpecialtyService.create_specialty(
-        specialty_data,
-    )
+    SpecialtyService.create_specialty(specialty_data)
 
-    return Responses.ok(
-        message="Specialty created successfully",
-    )
+    return Responses.created(message="Specialty created successfully")
 
 
 # ==========================
@@ -34,15 +37,23 @@ def create_specialty(specialty_data: SpecialtyCreateSchema):
 # ==========================
 
 
-@router.get("/")
-def get_all_specialties():
+@router.get(
+    "",
+    dependencies=[Depends(require_permission("specialty:read"))],
+)
+def get_all_specialties(
+    department_id: Optional[int] = Query(default=None),
+):
 
     return Responses.ok(
-        data=SpecialtyService.get_all_specialties(),
+        data=SpecialtyService.get_all_specialties(department_id),
     )
 
 
-@router.get("/{specialty_id}")
+@router.get(
+    "/{specialty_id}",
+    dependencies=[Depends(require_permission("specialty:read"))],
+)
 def get_specialty_by_id(specialty_id: int):
 
     return Responses.ok(
@@ -55,17 +66,12 @@ def get_specialty_by_id(specialty_id: int):
 # ==========================
 
 
-@router.put("/{specialty_id}")
-def update_specialty(
-    specialty_id: int,
-    specialty_data: SpecialtyUpdateSchema,
-):
+@router.put(
+    "/{specialty_id}",
+    dependencies=[Depends(require_permission("specialty:update"))],
+)
+def update_specialty(specialty_id: int, specialty_data: SpecialtyUpdateSchema):
 
-    SpecialtyService.update_specialty(
-        specialty_id,
-        specialty_data,
-    )
+    SpecialtyService.update_specialty(specialty_id, specialty_data)
 
-    return Responses.ok(
-        message="Specialty updated successfully",
-    )
+    return Responses.ok(message="Specialty updated successfully")

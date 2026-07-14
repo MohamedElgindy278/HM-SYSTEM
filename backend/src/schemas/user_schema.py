@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field
@@ -28,3 +29,5 @@ class UserResponseSchema(BaseModel):
     email: EmailStr
     phone: Optional[str] = None
     is_active: bool
+    created_at: datetime
+    updated_at: datetime

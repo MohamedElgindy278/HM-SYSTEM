@@ -1,121 +1,143 @@
-from pyodbc import Error
-
 from src.config.database import get_pyodbc_connection
+from src.core.decorators import handle_db_errors
+from src.core.exceptions import Errors
+from src.schemas.common_schema import PaginatedResponse
 from src.schemas.user_schema import (
     UserCreateSchema,
     UserResponseSchema,
     UserUpdateSchema,
 )
 from src.core.security import hash_password
-from src.core.exceptions import (
-    Errors,
-    ExceptionFactory,
-)
-from typing import List
+from src.core.query_utils import paginate
 
 
 class UserService:
 
     @staticmethod
-    def create_user(user_data: UserCreateSchema):
+    @handle_db_errors("Failed to create user")
+    def create_user(user_data: UserCreateSchema) -> None:
 
-        try:
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
 
-            with get_pyodbc_connection() as conn:
+            # Check username
+            cursor.execute(
+                """
+                SELECT user_id
+                FROM [User]
+                WHERE username = ?
+                AND is_deleted = 0
+                """,
+                (user_data.username,),
+            )
+            if cursor.fetchone():
+                raise Errors.user_exists()
 
-                cursor = conn.cursor()
+            # Check email
+            cursor.execute(
+                """
+                SELECT user_id
+                FROM [User]
+                WHERE email = ?
+                AND is_deleted = 0
+                """,
+                (user_data.email,),
+            )
+            if cursor.fetchone():
+                raise Errors.email_exists()
 
-                # Check username
-                cursor.execute(
-                    """
-                    SELECT user_id
-                    FROM [User]
-                    WHERE username = ?
-                    """,
-                    (user_data.username,),
+            password_hash = hash_password(user_data.password)
+
+            cursor.execute(
+                """
+                INSERT INTO [User]
+                (
+                    username,
+                    password_hash,
+                    first_name,
+                    last_name,
+                    email,
+                    phone
                 )
-
-                if cursor.fetchone():
-                    raise Errors.user_exists()
-
-                # Check email
-                cursor.execute(
-                    """
-                    SELECT user_id
-                    FROM [User]
-                    WHERE email = ?
-                    """,
-                    (user_data.email,),
-                )
-
-                if cursor.fetchone():
-                    raise Errors.email_exists()
-
-                # Hash password
-                password_hash = hash_password(user_data.password)
-
-                # Insert user
-                cursor.execute(
-                    """
-                    INSERT INTO [User]
-                    (
-                        username,
-                        password_hash,
-                        first_name,
-                        last_name,
-                        email,
-                        phone
-                    )
-                    VALUES
-                    (
-                        ?, ?, ?, ?, ?, ?
-                    )
-                    """,
-                    (
-                        user_data.username,
-                        password_hash,
-                        user_data.first_name,
-                        user_data.last_name,
-                        user_data.email,
-                        user_data.phone,
-                    ),
-                )
-
-                conn.commit()
-
-        except Error:
-            raise ExceptionFactory.server_error("Failed to create user")
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    user_data.username,
+                    password_hash,
+                    user_data.first_name,
+                    user_data.last_name,
+                    user_data.email,
+                    user_data.phone,
+                ),
+            )
+            conn.commit()
 
     @staticmethod
+    @handle_db_errors("Failed to retrieve user")
     def get_user_by_id(user_id: int) -> UserResponseSchema:
 
-        try:
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
 
-            with get_pyodbc_connection() as conn:
-                cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT
+                    user_id, username, first_name, last_name,
+                    email, phone, is_active, created_at, updated_at
+                FROM [User]
+                WHERE user_id = ?
+                AND is_deleted = 0
+                """,
+                (user_id,),
+            )
+            row = cursor.fetchone()
 
-                cursor.execute(
-                    """
-                    SELECT
-                        user_id,
-                        username,
-                        first_name,
-                        last_name,
-                        email,
-                        phone,
-                        is_active
-                    FROM [User]
-                    WHERE user_id = ?
-                    """,
-                    (user_id,),
-                )
+            if not row:
+                raise Errors.user_not_found()
 
-                row = cursor.fetchone()
+            return UserResponseSchema(
+                user_id=row.user_id,
+                username=row.username,
+                first_name=row.first_name,
+                last_name=row.last_name,
+                email=row.email,
+                phone=row.phone,
+                is_active=row.is_active,
+                created_at=row.created_at,
+                updated_at=row.updated_at,
+            )
 
-                if not row:
-                    raise Errors.user_not_found()
+    @staticmethod
+    @handle_db_errors("Failed to retrieve users")
+    def get_all_users(
+        start_num: int = 1,
+        page_size: int = 20,
+    ) -> PaginatedResponse[UserResponseSchema]:
 
-                return UserResponseSchema(
+        offset, limit = paginate(start_num, page_size)
+
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT COUNT(*) AS total FROM [User] WHERE is_deleted = 0")
+            total = cursor.fetchone().total
+
+            cursor.execute(
+                """
+                SELECT
+                    user_id, username, first_name, last_name,
+                    email, phone, is_active, created_at, updated_at
+                FROM [User]
+                WHERE is_deleted = 0
+                ORDER BY user_id
+                OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+                """,
+                (offset, limit),
+            )
+            rows = cursor.fetchall()
+
+            items = [
+                UserResponseSchema(
                     user_id=row.user_id,
                     username=row.username,
                     first_name=row.first_name,
@@ -123,152 +145,101 @@ class UserService:
                     email=row.email,
                     phone=row.phone,
                     is_active=row.is_active,
+                    created_at=row.created_at,
+                    updated_at=row.updated_at,
                 )
+                for row in rows
+            ]
 
-        except Error:
-            raise ExceptionFactory.server_error("Failed to retrieve user")
+            return PaginatedResponse(items=items, total=total)
 
     @staticmethod
-    def get_all_users() -> List[UserResponseSchema]:
+    @handle_db_errors("Failed to update user")
+    def update_user(user_id: int, user_data: UserUpdateSchema) -> None:
 
-        all_users = []
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
 
-        try:
+            cursor.execute(
+                """
+                SELECT first_name, last_name, email, phone, is_active
+                FROM [User]
+                WHERE user_id = ?
+                AND is_deleted = 0
+                """,
+                (user_id,),
+            )
+            row = cursor.fetchone()
 
-            with get_pyodbc_connection() as conn:
-                cursor = conn.cursor()
+            if not row:
+                raise Errors.user_not_found()
 
-                cursor.execute("""
-                    SELECT
-                        user_id,
-                        username,
-                        first_name,
-                        last_name,
-                        email,
-                        phone,
-                        is_active
-                    FROM [User]
-                    """)
+            fields = user_data.model_dump(exclude_unset=True)
 
-                rows = cursor.fetchall()
+            first_name = fields.get("first_name", row.first_name)
+            last_name = fields.get("last_name", row.last_name)
+            email = fields.get("email", row.email)
+            phone = fields.get("phone", row.phone)
+            is_active = fields.get("is_active", row.is_active)
 
-                # return
-                for row in rows:
-                    all_users.append(
-                        UserResponseSchema(
-                            user_id=row.user_id,
-                            username=row.username,
-                            first_name=row.first_name,
-                            last_name=row.last_name,
-                            email=row.email,
-                            phone=row.phone,
-                            is_active=row.is_active,
-                        )
-                    )
-
-                return all_users
-
-        except Error:
-            raise ExceptionFactory.server_error("Failed to retrieve user")
-
-    @staticmethod
-    def update_user(user_id: int, user_data: UserUpdateSchema):
-
-        try:
-
-            with get_pyodbc_connection() as conn:
-
-                cursor = conn.cursor()
-
-                # Check user exists
-                cursor.execute(
-                    """
-                    SELECT user_id
-                    FROM [User]
-                    WHERE user_id = ?
-                    """,
-                    (user_id,),
-                )
-
-                if not cursor.fetchone():
-                    raise Errors.user_not_found()
-
-                # Check email
+            if email != row.email:
                 cursor.execute(
                     """
                     SELECT user_id
                     FROM [User]
                     WHERE email = ?
                     AND user_id <> ?
+                    AND is_deleted = 0
                     """,
-                    (
-                        user_data.email,
-                        user_id,
-                    ),
+                    (email, user_id),
                 )
-
                 if cursor.fetchone():
                     raise Errors.email_exists()
 
-                # Update
-                cursor.execute(
-                    """
-                    UPDATE [User]
-                    SET
-                        first_name = ?,
-                        last_name = ?,
-                        email = ?,
-                        phone = ?,
-                        is_active = ?
-                    WHERE user_id = ?
-                    """,
-                    (
-                        user_data.first_name,
-                        user_data.last_name,
-                        user_data.email,
-                        user_data.phone,
-                        user_data.is_active,
-                        user_id,
-                    ),
-                )
-
-                conn.commit()
-
-        except Error:
-            raise ExceptionFactory.server_error("Failed to update user")
+            cursor.execute(
+                """
+                UPDATE [User]
+                SET
+                    first_name = ?,
+                    last_name = ?,
+                    email = ?,
+                    phone = ?,
+                    is_active = ?,
+                    updated_at = GETDATE()
+                WHERE user_id = ?
+                """,
+                (first_name, last_name, email, phone, is_active, user_id),
+            )
+            conn.commit()
 
     @staticmethod
-    def delete_user(user_id: int):
+    @handle_db_errors("Failed to delete user")
+    def delete_user(user_id: int) -> None:
 
-        try:
-            with get_pyodbc_connection() as conn:
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
 
-                cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT user_id
+                FROM [User]
+                WHERE user_id = ?
+                AND is_deleted = 0
+                """,
+                (user_id,),
+            )
+            if not cursor.fetchone():
+                raise Errors.user_not_found()
 
-                # Check user exists
-                cursor.execute(
-                    """
-                    SELECT user_id
-                    FROM [User]
-                    WHERE user_id = ?
-                    """,
-                    (user_id,),
-                )
-
-                if not cursor.fetchone():
-                    raise Errors.user_not_found()
-
-                cursor.execute(
-                    """
-                    DELETE FROM [User]
-                    WHERE user_id = ?
-                    """,
-                    (user_id,),
-                )
-
-                conn.commit()
-
-        except Error:
-            raise ExceptionFactory.server_error("Failed to delete user")
-
-
+            cursor.execute(
+                """
+                UPDATE [User]
+                SET
+                    is_deleted = 1,
+                    deleted_at = GETDATE(),
+                    is_active = 0
+                WHERE user_id = ?
+                """,
+                (user_id,),
+            )
+            conn.commit()

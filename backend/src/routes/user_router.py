@@ -1,5 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Query
 
+from src.core.deps import require_permission
 from src.core.responses import Responses
 from src.schemas.user_schema import UserCreateSchema, UserUpdateSchema
 from src.services.user_service import UserService
@@ -14,14 +15,16 @@ router = APIRouter(
 # ==========================
 
 
-@router.post("/")
+@router.post(
+    "",
+    status_code=201,
+    dependencies=[Depends(require_permission("user:create"))],
+)
 def create_user(user_data: UserCreateSchema):
 
     UserService.create_user(user_data)
 
-    return Responses.ok(
-        message="User created successfully",
-    )
+    return Responses.created(message="User created successfully")
 
 
 # ==========================
@@ -29,15 +32,24 @@ def create_user(user_data: UserCreateSchema):
 # ==========================
 
 
-@router.get("/")
-def get_all_users():
+@router.get(
+    "",
+    dependencies=[Depends(require_permission("user:read"))],
+)
+def get_all_users(
+    start_num: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+):
 
     return Responses.ok(
-        data=UserService.get_all_users(),
+        data=UserService.get_all_users(start_num, page_size),
     )
 
 
-@router.get("/{user_id}")
+@router.get(
+    "/{user_id}",
+    dependencies=[Depends(require_permission("user:read"))],
+)
 def get_user_by_id(user_id: int):
 
     return Responses.ok(
@@ -50,20 +62,15 @@ def get_user_by_id(user_id: int):
 # ==========================
 
 
-@router.put("/{user_id}")
-def update_user(
-    user_id: int,
-    user_data: UserUpdateSchema,
-):
+@router.put(
+    "/{user_id}",
+    dependencies=[Depends(require_permission("user:update"))],
+)
+def update_user(user_id: int, user_data: UserUpdateSchema):
 
-    UserService.update_user(
-        user_id,
-        user_data,
-    )
+    UserService.update_user(user_id, user_data)
 
-    return Responses.ok(
-        message="User updated successfully",
-    )
+    return Responses.ok(message="User updated successfully")
 
 
 # ==========================
@@ -71,11 +78,12 @@ def update_user(
 # ==========================
 
 
-@router.delete("/{user_id}")
+@router.delete(
+    "/{user_id}",
+    dependencies=[Depends(require_permission("user:delete"))],
+)
 def delete_user(user_id: int):
 
     UserService.delete_user(user_id)
 
-    return Responses.ok(
-        message="User deleted successfully",
-    )
+    return Responses.deleted(message="User deleted successfully")

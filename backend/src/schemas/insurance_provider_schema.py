@@ -1,5 +1,7 @@
+from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, EmailStr
+
+from pydantic import BaseModel, EmailStr, Field
 
 
 class InsuranceProviderCreateSchema(BaseModel):
@@ -19,3 +21,5 @@ class InsuranceProviderResponseSchema(BaseModel):
     name: str
     phone: Optional[str] = None
     email: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime

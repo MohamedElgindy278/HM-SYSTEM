@@ -1,4 +1,6 @@
+from datetime import datetime
 from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -22,3 +24,5 @@ class SpecialtyResponseSchema(BaseModel):
     name: str
     description: Optional[str] = None
     appointment_duration: int
+    created_at: datetime
+    updated_at: datetime

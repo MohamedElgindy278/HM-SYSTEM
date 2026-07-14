@@ -1,10 +1,11 @@
-from typing import Optional
 from datetime import date, datetime
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 
 class PatientCreateSchema(BaseModel):
-    mrn: str = Field(..., min_length=2, max_length=50) # Medical Record Number
+    mrn: str = Field(..., min_length=2, max_length=50)  # Medical Record Number
     first_name: str = Field(..., min_length=2, max_length=100)
     last_name: str = Field(..., min_length=2, max_length=100)
     date_of_birth: date
@@ -42,3 +43,4 @@ class PatientResponseSchema(BaseModel):
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
     created_at: datetime
+    updated_at: datetime

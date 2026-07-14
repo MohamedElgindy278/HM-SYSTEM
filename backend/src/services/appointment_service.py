@@ -1,443 +1,330 @@
-from typing import List
+from datetime import date, datetime, time, timedelta
+from typing import List, Optional
 
-from pyodbc import Error
+from pyodbc import IntegrityError
 
 from src.config.database import get_pyodbc_connection
-from src.core.exceptions import (
-    Errors,
-    ExceptionFactory,
-)
+from src.core.decorators import handle_db_errors
+from src.core.exceptions import Errors
 from src.schemas.appointment_schema import (
     AppointmentCreateSchema,
     AppointmentResponseSchema,
     AppointmentUpdateSchema,
 )
-from datetime import (
-    date,
-    time,
-    datetime,
-    timedelta,
-)
+from src.schemas.common_schema import PaginatedResponse
+from src.core.query_utils import build_where_clause, paginate
 
 
 class AppointmentService:
+
     @staticmethod
     def _generate_time_slots(
         start_time: time,
         end_time: time,
         appointment_duration: int,
-    ) -> list[time]:
+    ) -> List[time]:
 
         slots = []
+        reference_day = date.today()
 
-        current_time = datetime.combine(
-            datetime.today(),
-            start_time,
-        )
+        current_time = datetime.combine(reference_day, start_time)
+        shift_end = datetime.combine(reference_day, end_time)
 
-        shift_end = datetime.combine(
-            datetime.today(),
-            end_time,
-        )
-
-        while (
-            current_time
-            + timedelta(
-                minutes=appointment_duration,
-            )
-            <= shift_end
-        ):
-
-            slots.append(
-                current_time.time(),
-            )
-
-            current_time += timedelta(
-                minutes=appointment_duration,
-            )
+        while current_time + timedelta(minutes=appointment_duration) <= shift_end:
+            slots.append(current_time.time())
+            current_time += timedelta(minutes=appointment_duration)
 
         return slots
 
     @staticmethod
-    def get_available_slots(
-        doctor_id: int,
-        appointment_date: date,
-    ):
+    @handle_db_errors("Failed to retrieve available slots")
+    def get_available_slots(doctor_id: int, appointment_date: date) -> List[time]:
 
-        try:
-            with get_pyodbc_connection() as conn:
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
 
-                cursor = conn.cursor()
+            # Check doctor exists, is active, and get appointment duration
+            cursor.execute(
+                """
+                SELECT d.is_active, s.appointment_duration
+                FROM [Doctor] d
+                INNER JOIN [Specialty] s ON d.specialty_id = s.specialty_id
+                WHERE d.doctor_id = ?
+                """,
+                (doctor_id,),
+            )
+            row = cursor.fetchone()
 
-                # Check doctor exists and get appointment duration
-                cursor.execute(
-                    """
+            if not row:
+                raise Errors.doctor_not_found()
 
-                        SELECT
-                            s.appointment_duration
-                        FROM [Doctor] d
-                        INNER JOIN [Specialty] s
-                            ON d.specialty_id = s.specialty_id
-                        WHERE d.doctor_id = ?
+            if not row.is_active:
+                raise Errors.doctor_not_available()
 
-                        """,
-                    (doctor_id,),
-                )
+            appointment_duration = row.appointment_duration
 
-                row = cursor.fetchone()
+            day_of_week = appointment_date.strftime("%A")
 
-                if not row:
-                    raise Errors.doctor_not_found()
+            # Get doctor schedule for that day
+            cursor.execute(
+                """
+                SELECT start_time, end_time
+                FROM [DoctorSchedule]
+                WHERE doctor_id = ?
+                AND day_of_week = ?
+                AND is_active = 1
+                """,
+                (doctor_id, day_of_week),
+            )
+            row = cursor.fetchone()
 
-                appointment_duration = row.appointment_duration
+            if not row:
+                raise Errors.doctor_not_available()
 
-                # Get requested day name
-                day_of_week = appointment_date.strftime(
-                    "%A",
-                )
-
-                # Get doctor schedule
-                cursor.execute(
-                    """
-
-                        SELECT
-                            start_time,
-                            end_time
-                        FROM [DoctorSchedule]
-                        WHERE doctor_id = ?
-                        AND day_of_week = ?
-                        AND is_active = 1
-
-                        """,
-                    (
-                        doctor_id,
-                        day_of_week,
-                    ),
-                )
-
-                row = cursor.fetchone()
-
-                if not row:
-                    raise Errors.doctor_not_available()
-
-                start_time = row.start_time
-                end_time = row.end_time
-
-                # Generate all available time slots
-                slots = AppointmentService._generate_time_slots(
-                    start_time=start_time,
-                    end_time=end_time,
-                    appointment_duration=appointment_duration,
-                )
-
-                # Get reserved appointments
-                cursor.execute(
-                    """
-
-                        SELECT
-                            appointment_date
-                        FROM [Appointment]
-                        WHERE doctor_id = ?
-                        AND CAST(appointment_date AS DATE) = ?
-                        AND status = ?
-
-                        """,
-                    (
-                        doctor_id,
-                        appointment_date,
-                        "Scheduled",
-                    ),
-                )
-
-                rows = cursor.fetchall()
-
-                reserved_slots = [row.appointment_date.time() for row in rows]
-
-                # Remove reserved slots
-                available_slots = [slot for slot in slots if slot not in reserved_slots]
-
-                return available_slots
-
-        except Error:
-            raise ExceptionFactory.server_error(
-                "Failed to retrieve available slots",
+            slots = AppointmentService._generate_time_slots(
+                start_time=row.start_time,
+                end_time=row.end_time,
+                appointment_duration=appointment_duration,
             )
 
+            # Get already reserved slots
+            cursor.execute(
+                """
+                SELECT appointment_date
+                FROM [Appointment]
+                WHERE doctor_id = ?
+                AND CAST(appointment_date AS DATE) = ?
+                AND status = 'Scheduled'
+                """,
+                (doctor_id, appointment_date),
+            )
+            reserved_slots = {r.appointment_date.time() for r in cursor.fetchall()}
+
+            return [slot for slot in slots if slot not in reserved_slots]
+
     @staticmethod
-    def create_appointment(
-        appointment_data: AppointmentCreateSchema,
-    ):
+    @handle_db_errors("Failed to create appointment")
+    def create_appointment(appointment_data: AppointmentCreateSchema) -> None:
 
-        try:
-            with get_pyodbc_connection() as conn:
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
 
-                cursor = conn.cursor()
+            # Check patient exists
+            cursor.execute(
+                "SELECT patient_id FROM [Patient] WHERE patient_id = ? AND is_deleted = 0",
+                (appointment_data.patient_id,),
+            )
+            if not cursor.fetchone():
+                raise Errors.patient_not_found()
 
-                # Check patient exists
-                cursor.execute(
-                    """
-                    SELECT patient_id
-                    FROM [Patient]
-                    WHERE patient_id = ?
-                    """,
-                    (appointment_data.patient_id,),
-                )
+            # Check appointment date is in the future
+            if appointment_data.appointment_date <= datetime.now():
+                raise Errors.invalid_appointment_date()
 
-                if not cursor.fetchone():
-                    raise Errors.patient_not_found()
+            available_slots = AppointmentService.get_available_slots(
+                appointment_data.doctor_id,
+                appointment_data.appointment_date.date(),
+            )
 
-                # Check doctor exists
-                cursor.execute(
-                    """
-                    SELECT doctor_id
-                    FROM [Doctor]
-                    WHERE doctor_id = ?
-                    """,
-                    (appointment_data.doctor_id,),
-                )
+            if appointment_data.appointment_date.time() not in available_slots:
+                raise Errors.doctor_not_available()
 
-                if not cursor.fetchone():
-                    raise Errors.doctor_not_found()
+            # Check patient doesn't already have an appointment at this exact time
+            cursor.execute(
+                """
+                SELECT appointment_id
+                FROM [Appointment]
+                WHERE patient_id = ?
+                AND appointment_date = ?
+                AND status = 'Scheduled'
+                """,
+                (appointment_data.patient_id, appointment_data.appointment_date),
+            )
+            if cursor.fetchone():
+                raise Errors.patient_has_appointment()
 
-                # Check appointment date is valid
-                if appointment_data.appointment_date <= datetime.now():
-                    raise Errors.invalid_appointment_date()
-
-                # Get available slots
-                available_slots = AppointmentService.get_available_slots(
-                    appointment_data.doctor_id,
-                    appointment_data.appointment_date.date(),
-                )
-
-                appointment_time = appointment_data.appointment_date.time()
-
-                # Check selected slot is available
-                if appointment_time not in available_slots:
-                    raise Errors.doctor_not_available()
-
-                # Check patient already has appointment
-                cursor.execute(
-                    """
-                    SELECT appointment_id
-                    FROM [Appointment]
-                    WHERE patient_id = ?
-                    AND appointment_date = ?
-                    AND status = ?
-                    """,
-                    (
-                        appointment_data.patient_id,
-                        appointment_data.appointment_date,
-                        "Scheduled",
-                    ),
-                )
-
-                if cursor.fetchone():
-                    raise Errors.patient_has_appointment()
-
-                # Insert appointment
+            try:
                 cursor.execute(
                     """
                     INSERT INTO [Appointment]
-                    (
-                        patient_id,
-                        doctor_id,
-                        appointment_date,
-                        status,
-                        notes
-                    )
-                    VALUES
-                    (
-                        ?, ?, ?, ?, ?
-                    )
+                    (patient_id, doctor_id, appointment_date, status, notes)
+                    VALUES (?, ?, ?, 'Scheduled', ?)
                     """,
                     (
                         appointment_data.patient_id,
                         appointment_data.doctor_id,
                         appointment_data.appointment_date,
-                        appointment_data.status,
                         appointment_data.notes,
                     ),
                 )
-
                 conn.commit()
 
-        except Error:
-            raise ExceptionFactory.server_error(
-                "Failed to create appointment",
-            )
+            except IntegrityError as e:
+                if "UQ_Appointment_DoctorSlot" in str(e):
+                    raise Errors.doctor_not_available()
+                if "UQ_Appointment_PatientSlot" in str(e):
+                    raise Errors.patient_has_appointment()
+                raise
 
     @staticmethod
+    @handle_db_errors("Failed to update appointment")
     def update_appointment(
-        appointment_id: int,
-        appointment_data: AppointmentUpdateSchema,
-    ):
+        appointment_id: int, appointment_data: AppointmentUpdateSchema
+    ) -> None:
 
-        try:
-            with get_pyodbc_connection() as conn:
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
 
-                cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT patient_id, doctor_id, appointment_date, status, notes
+                FROM [Appointment]
+                WHERE appointment_id = ?
+                """,
+                (appointment_id,),
+            )
+            row = cursor.fetchone()
 
-                # Check appointment exists
-                cursor.execute(
-                    """
-                    SELECT
-                        patient_id,
-                        doctor_id,
-                        appointment_date,
-                        status,
-                        notes
-                    FROM [Appointment]
-                    WHERE appointment_id = ?
-                    """,
-                    (appointment_id,),
+            if not row:
+                raise Errors.appointment_not_found()
+
+            fields = appointment_data.model_dump(exclude_unset=True)
+
+            doctor_id = fields.get("doctor_id", row.doctor_id)
+            appointment_date = fields.get("appointment_date", row.appointment_date)
+            notes = fields.get("notes", row.notes)
+
+            slot_changed = (
+                doctor_id != row.doctor_id or appointment_date != row.appointment_date
+            )
+
+            # Only Scheduled appointments can be rescheduled
+            if row.status != "Scheduled" and slot_changed:
+                raise Errors.validation_error(
+                    "Cannot reschedule a completed or cancelled appointment",
                 )
 
-                row = cursor.fetchone()
-
-                if not row:
-                    raise Errors.appointment_not_found()
-
-                # Merge old values with new values
-                patient_id = row.patient_id
-
-                doctor_id = (
-                    appointment_data.doctor_id
-                    if appointment_data.doctor_id is not None
-                    else row.doctor_id
-                )
-
-                appointment_date = (
-                    appointment_data.appointment_date
-                    if appointment_data.appointment_date is not None
-                    else row.appointment_date
-                )
-
-                status = (
-                    appointment_data.status
-                    if appointment_data.status is not None
-                    else row.status
-                )
-
-                notes = (
-                    appointment_data.notes
-                    if appointment_data.notes is not None
-                    else row.notes
-                )
-
-                # Check doctor exists
-                cursor.execute(
-                    """
-                    SELECT doctor_id
-                    FROM [Doctor]
-                    WHERE doctor_id = ?
-                    """,
-                    (doctor_id,),
-                )
-
-                if not cursor.fetchone():
-                    raise Errors.doctor_not_found()
-
-                # Check appointment date is valid
+            if slot_changed:
                 if appointment_date <= datetime.now():
                     raise Errors.invalid_appointment_date()
 
-                # Get available slots
                 available_slots = AppointmentService.get_available_slots(
                     doctor_id,
                     appointment_date.date(),
                 )
-
-                appointment_time = appointment_date.time()
-                current_time = row.appointment_date.time()
-
-                # Check doctor availability
-                if (
-                    appointment_time != current_time
-                    and appointment_time not in available_slots
-                ):
+                if appointment_date.time() not in available_slots:
                     raise Errors.doctor_not_available()
 
-                # Check patient doesn't have another appointment
                 cursor.execute(
                     """
                     SELECT appointment_id
                     FROM [Appointment]
                     WHERE patient_id = ?
                     AND appointment_date = ?
-                    AND status = ?
+                    AND status = 'Scheduled'
                     AND appointment_id <> ?
                     """,
-                    (
-                        patient_id,
-                        appointment_date,
-                        "Scheduled",
-                        appointment_id,
-                    ),
+                    (row.patient_id, appointment_date, appointment_id),
                 )
-
                 if cursor.fetchone():
                     raise Errors.patient_has_appointment()
 
-                # Update appointment
+            try:
                 cursor.execute(
                     """
                     UPDATE [Appointment]
-                    SET
-                        doctor_id = ?,
-                        appointment_date = ?,
-                        status = ?,
-                        notes = ?
+                    SET doctor_id = ?, appointment_date = ?, notes = ?, updated_at = GETDATE()
                     WHERE appointment_id = ?
                     """,
-                    (
-                        doctor_id,
-                        appointment_date,
-                        status,
-                        notes,
-                        appointment_id,
-                    ),
+                    (doctor_id, appointment_date, notes, appointment_id),
                 )
-
                 conn.commit()
+            except IntegrityError as e:
+                if "UQ_Appointment_DoctorSlot" in str(e):
+                    raise Errors.doctor_not_available()
+                if "UQ_Appointment_PatientSlot" in str(e):
+                    raise Errors.patient_has_appointment()
+                raise
 
-        except Error:
-            raise ExceptionFactory.server_error(
-                "Failed to update appointment",
+    @staticmethod
+    @handle_db_errors("Failed to retrieve appointment")
+    def get_appointment_by_id(appointment_id: int) -> AppointmentResponseSchema:
+
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT appointment_id, patient_id, doctor_id, appointment_date,
+                       status, notes, created_at, updated_at
+                FROM [Appointment]
+                WHERE appointment_id = ?
+                """,
+                (appointment_id,),
+            )
+            row = cursor.fetchone()
+
+            if not row:
+                raise Errors.appointment_not_found()
+
+            return AppointmentResponseSchema(
+                appointment_id=row.appointment_id,
+                patient_id=row.patient_id,
+                doctor_id=row.doctor_id,
+                appointment_date=row.appointment_date,
+                status=row.status,
+                notes=row.notes,
+                created_at=row.created_at,
+                updated_at=row.updated_at,
             )
 
     @staticmethod
-    def get_appointment_by_id(
-        appointment_id: int,
-    ) -> AppointmentResponseSchema:
+    @handle_db_errors("Failed to retrieve appointments")
+    def get_all_appointments(
+        start_num: int = 1,
+        page_size: int = 20,
+        doctor_id: Optional[int] = None,
+        patient_id: Optional[int] = None,
+        status: Optional[str] = None,
+        from_date: Optional[date] = None,
+        to_date: Optional[date] = None,
+    ) -> PaginatedResponse[AppointmentResponseSchema]:
 
-        try:
+        where_clause, params = build_where_clause(
+            [
+                ("doctor_id = ?", doctor_id),
+                ("patient_id = ?", patient_id),
+                ("status = ?", status),
+                ("CAST(appointment_date AS DATE) >= ?", from_date),
+                ("CAST(appointment_date AS DATE) <= ?", to_date),
+            ]
+        )
 
-            with get_pyodbc_connection() as conn:
+        offset, limit = paginate(start_num, page_size)
 
-                cursor = conn.cursor()
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
 
-                cursor.execute(
-                    """
-                    SELECT
-                        appointment_id,
-                        patient_id,
-                        doctor_id,
-                        appointment_date,
-                        status,
-                        notes,
-                        created_at
-                    FROM [Appointment]
-                    WHERE appointment_id = ?
-                    """,
-                    (appointment_id,),
-                )
+            cursor.execute(
+                f"SELECT COUNT(*) AS total FROM [Appointment] {where_clause}", params
+            )
+            total = cursor.fetchone().total
 
-                row = cursor.fetchone()
+            cursor.execute(
+                f"""
+                SELECT appointment_id, patient_id, doctor_id, appointment_date,
+                    status, notes, created_at, updated_at
+                FROM [Appointment]
+                {where_clause}
+                ORDER BY appointment_date
+                OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
+                """,
+                params + [offset, limit],
+            )
+            rows = cursor.fetchall()
 
-                if not row:
-                    raise Errors.appointment_not_found()
-
-                return AppointmentResponseSchema(
+            items = [
+                AppointmentResponseSchema(
                     appointment_id=row.appointment_id,
                     patient_id=row.patient_id,
                     doctor_id=row.doctor_id,
@@ -445,140 +332,63 @@ class AppointmentService:
                     status=row.status,
                     notes=row.notes,
                     created_at=row.created_at,
+                    updated_at=row.updated_at,
                 )
+                for row in rows
+            ]
 
-        except Error:
-            raise ExceptionFactory.server_error(
-                "Failed to retrieve appointment",
-            )
+            return PaginatedResponse(items=items, total=total)
 
     @staticmethod
-    def get_all_appointments() -> list[AppointmentResponseSchema]:
+    @handle_db_errors("Failed to cancel appointment")
+    def cancel_appointment(appointment_id: int) -> None:
 
-        appointments = []
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
 
-        try:
-
-            with get_pyodbc_connection() as conn:
-
-                cursor = conn.cursor()
-
-                cursor.execute("""
-                    SELECT
-                        appointment_id,
-                        patient_id,
-                        doctor_id,
-                        appointment_date,
-                        status,
-                        notes,
-                        created_at
-                    FROM [Appointment]
-                    ORDER BY appointment_date
-                    """)
-
-                rows = cursor.fetchall()
-
-                for row in rows:
-
-                    appointments.append(
-                        AppointmentResponseSchema(
-                            appointment_id=row.appointment_id,
-                            patient_id=row.patient_id,
-                            doctor_id=row.doctor_id,
-                            appointment_date=row.appointment_date,
-                            status=row.status,
-                            notes=row.notes,
-                            created_at=row.created_at,
-                        )
-                    )
-
-                return appointments
-
-        except Error:
-            raise ExceptionFactory.server_error(
-                "Failed to retrieve appointments",
+            cursor.execute(
+                "SELECT status FROM [Appointment] WHERE appointment_id = ?",
+                (appointment_id,),
             )
+            row = cursor.fetchone()
+
+            if not row:
+                raise Errors.appointment_not_found()
+
+            if row.status != "Scheduled":
+                raise Errors.validation_error(
+                    "Only scheduled appointments can be cancelled"
+                )
+
+            cursor.execute(
+                "UPDATE [Appointment] SET status = 'Cancelled', updated_at = GETDATE() WHERE appointment_id = ?",
+                (appointment_id,),
+            )
+            conn.commit()
 
     @staticmethod
-    def cancel_appointment(
-        appointment_id: int,
-    ):
+    @handle_db_errors("Failed to complete appointment")
+    def complete_appointment(appointment_id: int) -> None:
 
-        try:
+        with get_pyodbc_connection() as conn:
+            cursor = conn.cursor()
 
-            with get_pyodbc_connection() as conn:
-
-                cursor = conn.cursor()
-
-                cursor.execute(
-                    """
-                    SELECT appointment_id
-                    FROM [Appointment]
-                    WHERE appointment_id = ?
-                    """,
-                    (appointment_id,),
-                )
-
-                if not cursor.fetchone():
-                    raise Errors.appointment_not_found()
-
-                cursor.execute(
-                    """
-                    UPDATE [Appointment]
-                    SET status = ?
-                    WHERE appointment_id = ?
-                    """,
-                    (
-                        "Cancelled",
-                        appointment_id,
-                    ),
-                )
-
-                conn.commit()
-
-        except Error:
-            raise ExceptionFactory.server_error(
-                "Failed to cancel appointment",
+            cursor.execute(
+                "SELECT status FROM [Appointment] WHERE appointment_id = ?",
+                (appointment_id,),
             )
+            row = cursor.fetchone()
 
-    @staticmethod
-    def complete_appointment(
-        appointment_id: int,
-    ):
+            if not row:
+                raise Errors.appointment_not_found()
 
-        try:
-
-            with get_pyodbc_connection() as conn:
-
-                cursor = conn.cursor()
-
-                cursor.execute(
-                    """
-                    SELECT appointment_id
-                    FROM [Appointment]
-                    WHERE appointment_id = ?
-                    """,
-                    (appointment_id,),
+            if row.status != "Scheduled":
+                raise Errors.validation_error(
+                    "Only scheduled appointments can be completed"
                 )
 
-                if not cursor.fetchone():
-                    raise Errors.appointment_not_found()
-
-                cursor.execute(
-                    """
-                    UPDATE [Appointment]
-                    SET status = ?
-                    WHERE appointment_id = ?
-                    """,
-                    (
-                        "Completed",
-                        appointment_id,
-                    ),
-                )
-
-                conn.commit()
-
-        except Error:
-            raise ExceptionFactory.server_error(
-                "Failed to complete appointment",
+            cursor.execute(
+                "UPDATE [Appointment] SET status = 'Completed', updated_at = GETDATE() WHERE appointment_id = ?",
+                (appointment_id,),
             )
+            conn.commit()

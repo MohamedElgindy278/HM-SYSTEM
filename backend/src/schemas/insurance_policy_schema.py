@@ -1,7 +1,8 @@
-from typing import Optional
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
-from pydantic import BaseModel, Field
+from typing import Optional
+
+from pydantic import BaseModel, Field, model_validator
 
 
 class InsurancePolicyCreateSchema(BaseModel):
@@ -12,6 +13,12 @@ class InsurancePolicyCreateSchema(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     is_active: bool = True
+
+    @model_validator(mode="after")
+    def check_dates(self):
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValueError("end_date must be on or after start_date")
+        return self
 
 
 class InsurancePolicyUpdateSchema(BaseModel):
@@ -32,3 +39,5 @@ class InsurancePolicyResponseSchema(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     is_active: bool
+    created_at: datetime
+    updated_at: datetime

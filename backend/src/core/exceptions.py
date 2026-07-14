@@ -13,6 +13,7 @@ class ErrorCodes:
     AUTH_EXPIRED_TOKEN = "AUTH_003"
     AUTH_UNAUTHORIZED = "AUTH_004"
     AUTH_FORBIDDEN = "AUTH_005"
+    AUTH_USER_INACTIVE = "AUTH_006"
 
     # USER
     USER_NOT_FOUND = "USER_001"
@@ -23,6 +24,12 @@ class ErrorCodes:
     DOCTOR_NOT_FOUND = "DOCTOR_001"
     DOCTOR_ALREADY_EXISTS = "DOCTOR_002"
     DOCTOR_LICENSE_ALREADY_EXISTS = "DOCTOR_003"
+
+    # DOCTOR SCHEDULE
+    DOCTOR_SCHEDULE_NOT_FOUND = "DOCTOR_SCHEDULE_001"
+    DOCTOR_SCHEDULE_ALREADY_EXISTS = "DOCTOR_SCHEDULE_002"
+    DOCTOR_SCHEDULE_INVALID_DAY = "DOCTOR_SCHEDULE_003"
+    DOCTOR_SCHEDULE_INVALID_TIME_RANGE = "DOCTOR_SCHEDULE_004"
 
     # PATIENT
     PATIENT_NOT_FOUND = "PATIENT_001"
@@ -177,6 +184,13 @@ class Errors:
         )
 
     @staticmethod
+    def inactive_user():
+        return ExceptionFactory.forbidden(
+            ErrorCodes.AUTH_USER_INACTIVE,
+            "User account is inactive",
+        )
+
+    @staticmethod
     def invalid_token():
         return ExceptionFactory.unauthorized(
             ErrorCodes.AUTH_INVALID_TOKEN,
@@ -255,60 +269,110 @@ class Errors:
         )
 
     # =========================
+    # DOCTOR SCHEDULE
+    # =========================
+
+    @staticmethod
+    def doctor_schedule_not_found():
+        return ExceptionFactory.not_found(
+            ErrorCodes.DOCTOR_SCHEDULE_NOT_FOUND,
+            "Doctor schedule not found",
+        )
+
+    @staticmethod
+    def doctor_schedule_exists():
+        return ExceptionFactory.conflict(
+            ErrorCodes.DOCTOR_SCHEDULE_ALREADY_EXISTS,
+            "Doctor already has a schedule for this day",
+        )
+
+    @staticmethod
+    def invalid_day_of_week():
+        return ExceptionFactory.bad_request(
+            ErrorCodes.DOCTOR_SCHEDULE_INVALID_DAY,
+            "Invalid day of week",
+        )
+
+    @staticmethod
+    def invalid_schedule_time():
+        return ExceptionFactory.bad_request(
+            ErrorCodes.DOCTOR_SCHEDULE_INVALID_TIME_RANGE,
+            "Start time must be before end time",
+        )
+
+    # =========================
     # PATIENT
     # =========================
 
     @staticmethod
     def patient_not_found():
         return ExceptionFactory.not_found(
-            "PATIENT_001",
+            ErrorCodes.PATIENT_NOT_FOUND,
             "Patient not found",
         )
 
     @staticmethod
     def patient_exists():
         return ExceptionFactory.conflict(
-            "PATIENT_002",
+            ErrorCodes.PATIENT_EXISTS,
             "Patient already exists",
         )
 
     @staticmethod
     def patient_mrn_exists():
         return ExceptionFactory.conflict(
-            "PATIENT_003",
+            ErrorCodes.PATIENT_MRN_EXISTS,
             "Medical Record Number (MRN) already exists",
         )
 
     @staticmethod
     def patient_national_id_exists():
         return ExceptionFactory.conflict(
-            "PATIENT_004",
+            ErrorCodes.PATIENT_NATIONAL_ID_EXISTS,
             "National ID already exists",
         )
 
     # ==========================
-    # Insurance Policy
+    # INSURANCE POLICY
     # ==========================
 
     @staticmethod
     def insurance_policy_not_found():
         return ExceptionFactory.not_found(
-            code=ErrorCodes.INSURANCE_POLICY_NOT_FOUND,
-            message="Insurance policy not found",
+            ErrorCodes.INSURANCE_POLICY_NOT_FOUND,
+            "Insurance policy not found",
         )
 
     @staticmethod
     def insurance_policy_exists():
         return ExceptionFactory.conflict(
-            code=ErrorCodes.INSURANCE_POLICY_EXISTS,
-            message="Insurance policy already exists",
+            ErrorCodes.INSURANCE_POLICY_EXISTS,
+            "Insurance policy already exists",
         )
 
     @staticmethod
     def patient_has_active_policy():
         return ExceptionFactory.conflict(
-            code=ErrorCodes.PATIENT_HAS_ACTIVE_POLICY,
-            message="Patient already has an active insurance policy",
+            ErrorCodes.PATIENT_HAS_ACTIVE_POLICY,
+            "Patient already has an active insurance policy",
+        )
+
+    # =========================
+    # INSURANCE PROVIDER
+    # =========================
+
+    @staticmethod
+    def insurance_provider_not_found():
+        return ExceptionFactory.not_found(
+            ErrorCodes.INSURANCE_PROVIDER_NOT_FOUND,
+            "Insurance provider not found",
+        )
+
+    @staticmethod
+    def insurance_provider_exists():
+        return ExceptionFactory.conflict(
+            ErrorCodes.INSURANCE_PROVIDER_ALREADY_EXISTS,
+            "Insurance provider already exists",
         )
 
     # =========================
@@ -415,17 +479,3 @@ class Errors:
     @staticmethod
     def internal_server_error():
         return ExceptionFactory.server_error()
-
-    @staticmethod
-    def insurance_provider_exists():
-        return ExceptionFactory.conflict(
-            ErrorCodes.INSURANCE_PROVIDER_ALREADY_EXISTS,
-            "Insurance provider already exists",
-        )
-
-    @staticmethod
-    def insurance_provider_not_found():
-        return ExceptionFactory.not_found(
-            ErrorCodes.INSURANCE_PROVIDER_NOT_FOUND,
-            "Insurance provider not found",
-        )
