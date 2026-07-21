@@ -1,0 +1,224 @@
+/* ==========================================================================
+   AUTH LAYOUT — LEFT BRAND PANEL
+   File: src/features/auth/components/AuthLayout.css
+   ========================================================================== */
+
+.login-screen {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+/* ---------- Brand panel ---------- */
+.brand-panel {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.25) 0%, transparent 50%),
+    linear-gradient(155deg, #0f2e7a 0%, #1746c9 38%, #2563eb 62%, #0891b2 100%);
+  padding: 56px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #fff;
+}
+
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse at 30% 30%, black 0%, transparent 70%);
+  mask-image: radial-gradient(ellipse at 30% 30%, black 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ---------- Top brand ---------- */
+.brand-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 2;
+}
+
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(6px);
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: 0.2px;
+}
+
+.brand-highlight {
+  color: #b9e6ff;
+  font-weight: 600;
+}
+
+/* ---------- Middle content ---------- */
+.brand-middle {
+  z-index: 2;
+  max-width: 460px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #c9f5e4;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: 26px;
+}
+
+.eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+}
+
+.headline {
+  font-size: 40px;
+  line-height: 1.18;
+  font-weight: 800;
+  margin: 0 0 18px 0;
+  letter-spacing: -0.02em;
+}
+
+.headline-gradient {
+  background: linear-gradient(90deg, #8fd9ff, #b7f7e0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-description {
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 400;
+  margin: 0 0 34px 0;
+}
+
+/* ---------- Stats ---------- */
+.brand-stats {
+  display: flex;
+  gap: 32px;
+}
+
+.stat-number {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.stat-label {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.68);
+  margin-top: 2px;
+}
+
+.stat-divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- ECG ---------- */
+.ecg-wrapper {
+  z-index: 2;
+  margin-top: 38px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(8px);
+}
+
+.ecg-path {
+  fill: none;
+  stroke: #7fffd4;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px rgba(127, 255, 212, 0.55));
+  stroke-dasharray: 500;
+  stroke-dashoffset: 500;
+  animation: ecgDraw 3.5s linear infinite;
+}
+
+.ecg-caption {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 8px;
+  letter-spacing: 0.03em;
+}
+
+/* ---------- Bottom ---------- */
+.brand-bottom {
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.brand-bottom-right {
+  display: flex;
+  gap: 18px;
+}
+
+.trust-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trust-icon {
+  width: 15px;
+  height: 15px;
+  stroke: rgba(255, 255, 255, 0.6);
+}
+
+/* ---------- Right panel container ---------- */
+.form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  position: relative;
+}
+
+/* ---------- Animations ---------- */
+@keyframes ecgDraw {
+  from {
+    stroke-dashoffset: 500;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}

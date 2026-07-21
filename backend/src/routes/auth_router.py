@@ -5,8 +5,11 @@ from src.core.responses import Responses
 from src.schemas.auth_schema import (
     ChangePasswordSchema,
     CurrentUserSchema,
+    ForgotPasswordSchema,
     LoginSchema,
     RefreshTokenSchema,
+    ResetPasswordSchema,
+    VerifyOTPSchema,
 )
 from src.services.auth_service import AuthService
 
@@ -81,3 +84,32 @@ def change_password(
 def get_me(current_user: CurrentUserSchema = Depends(get_current_user)):
 
     return Responses.ok(data=current_user)
+
+
+# ==========================
+# Forgot Password
+# ==========================
+
+
+@router.post("/forgot-password")
+def forgot_password(forgot_data: ForgotPasswordSchema):
+
+    AuthService.forgot_password(forgot_data)
+
+    return Responses.ok(message="If the email exists, an OTP has been sent.")
+
+
+@router.post("/verify-otp")
+def verify_otp(otp_data: VerifyOTPSchema):
+
+    AuthService.verify_otp(otp_data)
+
+    return Responses.ok(message="OTP verified successfully.")
+
+
+@router.post("/reset-password")
+def reset_password(data: ResetPasswordSchema):
+
+    AuthService.reset_password(data)
+
+    return Responses.ok(message="Password reset successfully.")

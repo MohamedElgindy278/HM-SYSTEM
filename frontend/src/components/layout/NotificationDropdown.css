@@ -1,0 +1,136 @@
+.notification-dropdown {
+  position: relative;
+}
+
+.notification-btn {
+  width: 44px;
+  height: 44px;
+  position: relative;
+  border: none;
+  border-radius: 12px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #475569;
+  transition: 0.25s;
+}
+
+.notification-btn:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  width: 300px;
+  max-height: 360px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 18px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 20px 50px rgba(15, 23, 42, 0.12);
+  animation: dropdownShow 0.22s ease;
+  z-index: 999;
+}
+
+.notification-menu-header {
+  padding: 14px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.notification-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item:hover {
+  background: #eff6ff;
+}
+
+.notification-item-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.notification-item-time {
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+.notification-empty {
+  padding: 24px 18px;
+  text-align: center;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+@keyframes dropdownShow {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .notification-menu {
+    position: fixed;
+
+    left: 12px;
+    right: 12px;
+
+    top: 78px;
+
+    width: auto;
+
+    max-height: calc(100vh - 100px);
+
+    border-radius: 18px;
+
+    overflow-y: auto;
+
+    animation: dropdownShow 0.25s ease;
+
+    z-index: 9999;
+  }
+}

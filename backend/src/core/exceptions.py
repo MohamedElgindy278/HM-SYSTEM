@@ -68,6 +68,10 @@ class ErrorCodes:
     APPOINTMENT_PATIENT_HAS_APPOINTMENT = "APPOINTMENT_003"
     APPOINTMENT_INVALID_DATE = "APPOINTMENT_004"
 
+    # OTP
+    INVALID_OTP = "INVALID_OTP"
+    EXPIRED_OTP = "EXPIRED_OTP"
+
 
 # ==========================================================
 # BASE EXCEPTION
@@ -452,6 +456,20 @@ class Errors:
         return ExceptionFactory.bad_request(
             ErrorCodes.APPOINTMENT_INVALID_DATE,
             "Appointment date must be in the future",
+        )
+
+    @staticmethod
+    def invalid_otp():
+        return ExceptionFactory.bad_request(
+            "Invalid OTP",
+            ErrorCodes.INVALID_OTP,
+        )
+
+    @staticmethod
+    def expired_otp():
+        return ExceptionFactory.bad_request(
+            "OTP has expired",
+            ErrorCodes.EXPIRED_OTP,
         )
 
     # =========================

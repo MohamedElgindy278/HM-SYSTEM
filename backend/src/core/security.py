@@ -7,6 +7,7 @@ from passlib.context import CryptContext
 
 from src.core.exceptions import Errors
 from src.config.settings import settings
+import random
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -93,3 +94,17 @@ def generate_refresh_token() -> str:
 def hash_refresh_token(token: str) -> str:
 
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def generate_otp() -> str:
+    """
+    Generate a 6-digit One-Time Password.
+    """
+    return f"{random.randint(0, 999999):06d}"
+
+
+def hash_otp(otp: str) -> str:
+    """
+    Hash OTP before storing it in database.
+    """
+    return hashlib.sha256(otp.encode("utf-8")).hexdigest()

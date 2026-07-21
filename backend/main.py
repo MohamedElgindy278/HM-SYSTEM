@@ -11,6 +11,7 @@ from src.routes import (
     doctor_schedule_router,
     appointment_router,
     auth_router,
+    dashboard_router,
 )
 
 app = FastAPI(
@@ -36,3 +37,4 @@ app.include_router(department_router.router)
 app.include_router(specialty_router.router)
 app.include_router(insurance_provider_router.router)
 app.include_router(insurance_policy_router.router)
+app.include_router(dashboard_router.router)

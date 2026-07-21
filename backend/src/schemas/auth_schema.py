@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 # ==========================
 # Login
@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 class LoginSchema(BaseModel):
     username: str = Field(..., min_length=3, max_length=100)
     password: str = Field(..., min_length=1, max_length=72)
+    remember_me: bool = False
 
 
 # ==========================
@@ -47,4 +48,23 @@ class CurrentUserSchema(BaseModel):
 
 class ChangePasswordSchema(BaseModel):
     old_password: str = Field(..., min_length=1, max_length=72)
+    new_password: str = Field(..., min_length=8, max_length=72)
+
+
+# ==========================
+# Forgot Password
+# ==========================
+
+
+class ForgotPasswordSchema(BaseModel):
+    email: EmailStr
+
+
+class VerifyOTPSchema(BaseModel):
+    email: EmailStr
+    otp: str = Field(..., min_length=6, max_length=6)
+
+
+class ResetPasswordSchema(BaseModel):
+    email: EmailStr
     new_password: str = Field(..., min_length=8, max_length=72)
