@@ -1,89 +1,73 @@
-import { UserPlus, CheckCircle2, FilePlus2, FlaskConical, CreditCard } from 'lucide-react';
+import { UserPlus, Trash2, Pencil, Activity } from 'lucide-react';
+import { useRecentActivity } from '../hooks/useDashboard';
+import Loading from '../../../components/common/Loading';
 
-const ACTIVITY = [
-  {
-    id: 1,
-    icon: UserPlus,
-    iconBg: '#EFF6FF',
-    iconColor: '#2563EB',
-    text: (
-      <>
-        <b>Patient Registered</b> — Rana Youssef was added to the system
-      </>
-    ),
-    time: '6 minutes ago',
-  },
-  {
-    id: 2,
-    icon: CheckCircle2,
-    iconBg: '#ECFDF5',
-    iconColor: '#047857',
-    text: (
-      <>
-        <b>Appointment Completed</b> — Hany Kamal with Dr. Sarah Ahmed
-      </>
-    ),
-    time: '22 minutes ago',
-  },
-  {
-    id: 3,
-    icon: FilePlus2,
-    iconBg: '#EFF6FF',
-    iconColor: '#2563EB',
-    text: (
-      <>
-        <b>Prescription Created</b> — Dr. Khaled Hassan for Laila Mostafa
-      </>
-    ),
-    time: '40 minutes ago',
-  },
-  {
-    id: 4,
-    icon: FlaskConical,
-    iconBg: '#FFFBEB',
-    iconColor: '#B45309',
-    text: (
-      <>
-        <b>Lab Result Uploaded</b> — Blood panel for John Doe is ready for review
-      </>
-    ),
-    time: '1 hour ago',
-  },
-  {
-    id: 5,
-    icon: CreditCard,
-    iconBg: '#ECFDF5',
-    iconColor: '#047857',
-    text: (
-      <>
-        <b>Payment Completed</b> — $420 received from Ahmed Sami
-      </>
-    ),
-    time: '1 hour ago',
-  },
-];
+const ACTION_LABEL = {
+  INSERT: 'created',
+  UPDATE: 'updated',
+  DELETE: 'deleted',
+};
+
+const ACTION_ICON = {
+  INSERT: UserPlus,
+  UPDATE: Pencil,
+  DELETE: Trash2,
+};
+
+const ACTION_COLOR = {
+  INSERT: '#10b981',
+  UPDATE: '#2563eb',
+  DELETE: '#ef4444',
+};
+
+function formatDate(dateString) {
+  return new Date(dateString).toLocaleString([], {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+}
 
 export default function RecentActivity() {
+  const { data, loading, error } = useRecentActivity(5);
+  const activities = data || [];
+
   return (
     <>
       <h2 className="section-title">Recent Activity</h2>
+
       <div className="card">
-        <div className="timeline">
-          {ACTIVITY.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <div className="t-item" key={item.id}>
-                <div className="t-dot" style={{ background: item.iconBg, color: item.iconColor }}>
-                  <Icon size={15} strokeWidth={2} />
-                </div>
-                <div className="t-body">
-                  <div className="t-text">{item.text}</div>
-                  <div className="t-time">{item.time}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {loading && <Loading label="Loading activity..." />}
+        {error && <div className="empty-state error">{error}</div>}
+
+        {!loading && !error && (
+          <div className="timeline">
+            {activities.length === 0 ? (
+              <div className="empty-state">No recent activity.</div>
+            ) : (
+              activities.map((item) => {
+                const Icon = ACTION_ICON[item.action] || Activity;
+                const color = ACTION_COLOR[item.action] || '#64748b';
+                const verb = ACTION_LABEL[item.action] || item.action.toLowerCase();
+
+                return (
+                  <div className="t-item" key={item.audit_id}>
+                    <div className="t-dot" style={{ background: `${color}20`, color }}>
+                      <Icon size={17} />
+                    </div>
+
+                    <div className="t-body">
+                      <div className="t-text">
+                        <strong>{item.changed_by_name ?? 'System'}</strong> {verb}{' '}
+                        <strong>{item.table_name}</strong> #{item.record_id}
+                      </div>
+                      <div className="t-time">{formatDate(item.changed_at)}</div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
       </div>
     </>
   );

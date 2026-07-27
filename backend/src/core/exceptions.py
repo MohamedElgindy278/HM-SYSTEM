@@ -72,6 +72,20 @@ class ErrorCodes:
     INVALID_OTP = "INVALID_OTP"
     EXPIRED_OTP = "EXPIRED_OTP"
 
+    # Clinic
+    CLINIC_NOT_FOUND = "CLINIC_001"
+    CLINIC_ALREADY_EXISTS = "CLINIC_002"
+
+    # Room
+    ROOM_NOT_FOUND = "ROOM_001"
+    ROOM_ALREADY_EXISTS = "ROOM_002"
+
+    # Patient Queue
+    QUEUE_ENTRY_NOT_FOUND = "QUEUE_001"
+
+    # Ward
+    WARD_NOT_FOUND = "WARD_001"
+
 
 # ==========================================================
 # BASE EXCEPTION
@@ -470,6 +484,48 @@ class Errors:
         return ExceptionFactory.bad_request(
             "OTP has expired",
             ErrorCodes.EXPIRED_OTP,
+        )
+
+    @staticmethod
+    def clinic_not_found():
+        return ExceptionFactory.not_found(
+            ErrorCodes.CLINIC_NOT_FOUND,
+            "Clinic not found",
+        )
+
+    @staticmethod
+    def clinic_exists():
+        return ExceptionFactory.conflict(
+            ErrorCodes.CLINIC_ALREADY_EXISTS,
+            "A clinic with this name already exists in this department",
+        )
+
+    @staticmethod
+    def room_not_found():
+        return ExceptionFactory.not_found(
+            ErrorCodes.ROOM_NOT_FOUND,
+            "Room not found",
+        )
+
+    @staticmethod
+    def room_exists():
+        return ExceptionFactory.conflict(
+            ErrorCodes.ROOM_ALREADY_EXISTS,
+            "A room with this number already exists in this department",
+        )
+
+    @staticmethod
+    def queue_entry_not_found():
+        return ExceptionFactory.not_found(
+            ErrorCodes.QUEUE_ENTRY_NOT_FOUND,
+            "Queue entry not found",
+        )
+
+    @staticmethod
+    def ward_not_found():
+        return ExceptionFactory.not_found(
+            ErrorCodes.WARD_NOT_FOUND,
+            "Ward not found",
         )
 
     # =========================

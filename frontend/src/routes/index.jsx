@@ -9,7 +9,7 @@ import Dashboard from '../features/dashboard/pages/Dashboard';
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: '/dashboard',
     element: (
       <ProtectedRoute>
         <MainLayout />
@@ -18,7 +18,7 @@ const router = createBrowserRouter([
     children: [{ index: true, element: <Dashboard /> }],
   },
   {
-    path: '/login',
+    path: '/',
     element: <Login />,
   },
 ]);

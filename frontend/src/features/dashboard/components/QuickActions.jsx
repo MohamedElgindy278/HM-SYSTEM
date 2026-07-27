@@ -1,35 +1,32 @@
-import {
-  UserPlus,
-  CalendarPlus,
-  Stethoscope,
-  FilePlus2,
-  FileBarChart2,
-  Receipt,
-} from 'lucide-react';
+import { UserPlus, CalendarPlus, BedDouble, ClipboardPlus, Pill, CreditCard } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const ACTIONS = [
-  { id: 'add-patient', label: 'Add Patient', icon: UserPlus },
-  { id: 'book-appointment', label: 'Book Appointment', icon: CalendarPlus },
-  { id: 'register-doctor', label: 'Register Doctor', icon: Stethoscope },
-  { id: 'create-prescription', label: 'Create Prescription', icon: FilePlus2 },
-  { id: 'generate-report', label: 'Generate Report', icon: FileBarChart2 },
-  { id: 'create-invoice', label: 'Create Invoice', icon: Receipt },
+  { title: 'Add Patient', Icon: UserPlus, path: '/patients/create' },
+  { title: 'New Appointment', Icon: CalendarPlus, path: '/appointments/create' },
+  { title: 'Manage Beds', Icon: BedDouble, path: '/beds' },
+  { title: 'New Encounter', Icon: ClipboardPlus, path: '/encounters/create' },
+  { title: 'Prescriptions', Icon: Pill, path: '/prescriptions' },
+  { title: 'Payments', Icon: CreditCard, path: '/payments' },
 ];
 
-export default function QuickActions({ onAction }) {
+export default function QuickActions() {
+  const navigate = useNavigate();
+
   return (
     <>
       <h2 className="section-title">Quick Actions</h2>
-      <div className="grid grid-actions">
-        {ACTIONS.map(({ id, label, icon: Icon }) => (
-          <button key={id} type="button" className="action-card" onClick={() => onAction?.(id)}>
+
+      <section className="grid grid-actions">
+        {ACTIONS.map(({ title, Icon, path }) => (
+          <button key={title} type="button" className="action-card" onClick={() => navigate(path)}>
             <div className="action-icon">
-              <Icon size={19} strokeWidth={2} />
+              <Icon size={22} />
             </div>
-            <span className="action-label">{label}</span>
+            <span className="action-label">{title}</span>
           </button>
         ))}
-      </div>
+      </section>
     </>
   );
 }

@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
       remember_me: rememberMe,
     });
     console.log(response);
-    const { access_token, refresh_token } = response.data.data;
+    const { access_token, refresh_token } = response.data;
 
     localStorage.setItem('access_token', access_token);
     localStorage.setItem('refresh_token', refresh_token);

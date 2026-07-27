@@ -12,6 +12,9 @@ from src.routes import (
     appointment_router,
     auth_router,
     dashboard_router,
+    clinic_router,
+    room_router,
+    patient_queue_router,
 )
 
 app = FastAPI(
@@ -28,6 +31,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router.router)
+app.include_router(dashboard_router.router)
 app.include_router(user_router.router)
 app.include_router(doctor_router.router)
 app.include_router(doctor_schedule_router.router)
@@ -37,4 +41,6 @@ app.include_router(department_router.router)
 app.include_router(specialty_router.router)
 app.include_router(insurance_provider_router.router)
 app.include_router(insurance_policy_router.router)
-app.include_router(dashboard_router.router)
+app.include_router(clinic_router.router)
+app.include_router(room_router.router)
+app.include_router(patient_queue_router.router)

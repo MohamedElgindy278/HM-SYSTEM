@@ -27,11 +27,11 @@ export default function UserDropdown() {
   return (
     <div className="user-dropdown" ref={menuRef}>
       <button className="user-dropdown-trigger" onClick={() => setOpen((prev) => !prev)}>
-        <div className="user-avatar">{user?.data?.username?.slice(0, 2).toUpperCase()}</div>
+        <div className="user-avatar">{user?.username?.slice(0, 2).toUpperCase()}</div>
 
         <div className="user-info">
-          <h4>{user?.data?.username}</h4>
-          <span>{user?.data?.roles?.join(', ')}</span>
+          <h4>{user?.username}</h4>
+          <span>{user?.roles?.join(', ')}</span>
         </div>
 
         <ChevronDown size={18} className={`dropdown-arrow ${open ? 'rotate' : ''}`} />

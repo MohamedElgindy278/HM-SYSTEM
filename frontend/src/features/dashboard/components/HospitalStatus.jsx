@@ -1,86 +1,82 @@
-import { BedDouble, DoorOpen, Clock, Activity, AlertTriangle, Droplet } from 'lucide-react';
+import { BedDouble, DoorOpen, Building2, Stethoscope, Siren, Activity } from 'lucide-react';
+import { useHospitalStatus } from '../hooks/useDashboard';
+import Loading from '../../../components/common/Loading';
 
-const TILES = [
-  {
-    id: 'icu-beds',
-    tone: 'tone-danger',
-    icon: BedDouble,
-    value: '42 / 50',
-    label: 'ICU Beds Occupied',
-    meter: 84,
-  },
-  {
-    id: 'rooms',
-    tone: 'tone-success',
-    icon: DoorOpen,
-    value: '37',
-    label: 'Available Rooms',
-    meter: 52,
-  },
-  {
-    id: 'waiting',
-    tone: 'tone-warning',
-    icon: Clock,
-    value: '19',
-    label: 'Waiting Patients',
-    meter: 38,
-  },
-  {
-    id: 'operation-rooms',
-    tone: 'tone-primary',
-    icon: Activity,
-    value: '5 / 8',
-    label: 'Operation Rooms Busy',
-    meter: 62,
-  },
-  {
-    id: 'emergency-queue',
-    tone: 'tone-danger',
-    icon: AlertTriangle,
-    value: '7',
-    label: 'Emergency Queue',
-    pulse: true,
-  },
-  {
-    id: 'blood-bank',
-    tone: 'tone-danger',
-    icon: Droplet,
-    value: 'Adequate',
-    label: 'Blood Bank Status',
-    meter: 70,
-  },
-];
+const AVAILABILITY_TONE = {
+  Normal: 'tone-success',
+  Busy: 'tone-warning',
+  Critical: 'tone-danger',
+};
 
-function StatusTile({ tile }) {
-  const Icon = tile.icon;
+function StatusTile({ tone, Icon, value, label }) {
   return (
-    <div className={`status-tile ${tile.tone}`}>
+    <div className={`status-tile ${tone}`}>
       <div className="status-icon">
-        <Icon size={17} strokeWidth={2} />
+        <Icon size={20} />
       </div>
       <div className="status-body">
-        <div className="status-value">{tile.value}</div>
-        <div className="status-label">{tile.label}</div>
-        {typeof tile.meter === 'number' && (
-          <div className="meter">
-            <div className="meter-fill" style={{ width: `${tile.meter}%` }} />
-          </div>
-        )}
+        <div className="status-value">{value}</div>
+        <div className="status-label">{label}</div>
       </div>
-      {tile.pulse && <span className="pulse" />}
     </div>
   );
 }
 
 export default function HospitalStatus() {
+  const { data: status, loading, error } = useHospitalStatus();
+
   return (
     <>
       <h2 className="section-title">Hospital Status</h2>
-      <div className="grid grid-status">
-        {TILES.map((tile) => (
-          <StatusTile key={tile.id} tile={tile} />
-        ))}
-      </div>
+
+      {loading && <Loading label="Loading hospital status..." />}
+      {error && <div className="empty-state error">{error}</div>}
+
+      {!loading && !error && status && (
+        <section className="grid grid-status">
+          <StatusTile
+            tone="tone-primary"
+            Icon={BedDouble}
+            value={`${status.bed_occupancy.occupancy_rate}%`}
+            label="Bed Occupancy"
+          />
+
+          <StatusTile
+            tone="tone-primary"
+            Icon={DoorOpen}
+            value={`${status.room_occupancy.occupied} / ${status.room_occupancy.total}`}
+            label="Room Occupancy"
+          />
+
+          <StatusTile
+            tone="tone-primary"
+            Icon={Building2}
+            value={status.ward_status.total_wards}
+            label="Wards"
+          />
+
+          <StatusTile
+            tone="tone-primary"
+            Icon={Stethoscope}
+            value={status.clinic_status.open_clinics}
+            label="Open Clinics"
+          />
+
+          <StatusTile
+            tone={status.emergency_queue.waiting_patients > 0 ? 'tone-danger' : 'tone-success'}
+            Icon={Siren}
+            value={status.emergency_queue.waiting_patients}
+            label="Emergency Queue"
+          />
+
+          <StatusTile
+            tone={AVAILABILITY_TONE[status.hospital_availability.status] || 'tone-primary'}
+            Icon={Activity}
+            value={status.hospital_availability.status}
+            label="Hospital Availability"
+          />
+        </section>
+      )}
     </>
   );
 }

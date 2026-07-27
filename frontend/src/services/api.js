@@ -54,12 +54,12 @@ function rejectPendingRequests(error) {
 function forceLogout() {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
-  window.location.href = '/login';
+  window.location.href = '/';
 }
 
 api.interceptors.response.use(
   (response) => {
-    return response;
+    return response.data;
   },
 
   async (error) => {

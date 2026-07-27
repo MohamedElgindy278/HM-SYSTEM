@@ -1,33 +1,42 @@
+import { useNavigate } from 'react-router-dom';
+
 import Header from '../components/Header';
-import StatisticCards from '../components/StatisticCards';
+import StatisticsCards from '../components/StatisticsCards';
 import QuickActions from '../components/QuickActions';
 import HospitalStatus from '../components/HospitalStatus';
 import Analytics from '../components/Analytics';
-import TodaysAppointments from '../components/TodaysAppointments';
+import TodayAppointments from '../components/TodayAppointments';
 import RecentActivity from '../components/RecentActivity';
 
-import { useAuth } from '../../auth/context/AuthContext';
-
-import './dashboard.css';
+import './Dashboard.css';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  console.log(user);
+  const handleAppointmentAction = (type, appointmentId) => {
+    switch (type) {
+      case 'view':
+        navigate(`/appointments/${appointmentId}`);
+        break;
+      case 'edit':
+        navigate(`/appointments/${appointmentId}/edit`);
+        break;
+      case 'reschedule':
+        navigate(`/appointments/${appointmentId}/reschedule`);
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div className="dashboard">
-      <Header name={user?.data?.username} />
-
-      <StatisticCards />
-
-      <QuickActions onAction={(id) => console.log('quick action:', id)} />
-
+      <Header />
+      <StatisticsCards />
+      <QuickActions />
       <HospitalStatus />
-
       <Analytics />
-
-      <TodaysAppointments onRowAction={(id) => console.log('row action:', id)} />
-
+      <TodayAppointments onAction={handleAppointmentAction} />
       <RecentActivity />
     </div>
   );

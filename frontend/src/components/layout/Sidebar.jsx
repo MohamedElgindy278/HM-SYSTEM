@@ -2,15 +2,17 @@ import { NavLink } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
 
-import { sidebarItems } from './sidebarData';
 import { useAuth } from '../../features/auth/context/AuthContext';
+import { getVisibleSidebarItems } from './sidebarData';
 
 import './Sidebar.css';
 
 export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const [collapsed, setCollapsed] = useState(false);
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const permissions = user?.permissions || [];
 
+  const visibleSections = getVisibleSidebarItems(permissions);
   return (
     <>
       <div
@@ -35,7 +37,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
             </div>
           </div>
 
-          <div className='close-btn-div'>
+          <div className="close-btn-div">
             <button
               className="collapse-btn"
               onClick={() => setCollapsed((prev) => !prev)}
@@ -57,7 +59,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
         {/* ================= Navigation ================= */}
 
         <nav className="sidebar-nav">
-          {sidebarItems.map((group) => (
+          {visibleSections.map((group) => (
             <div key={group.section} className="sidebar-section">
               <span className="section-title">{group.section}</span>
 

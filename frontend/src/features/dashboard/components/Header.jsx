@@ -1,3 +1,5 @@
+import { useAuth } from '../../auth/context/AuthContext';
+
 function getGreeting() {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good Morning';
@@ -5,11 +7,15 @@ function getGreeting() {
   return 'Good Evening';
 }
 
-export default function Header({ name = '' }) {
+export default function Header() {
+  const { user } = useAuth();
+  const name = user?.username;
+
   return (
     <div className="welcome">
       <h1 className="welcome-title">
-        {getGreeting()}, {name} <span className="wave">👋</span>
+        {getGreeting()}
+        {name ? `, ${name}` : ''} <span className="wave">👋</span>
       </h1>
     </div>
   );

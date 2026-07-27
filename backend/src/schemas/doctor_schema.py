@@ -8,6 +8,7 @@ class DoctorCreateSchema(BaseModel):
     user_id: int
     specialty_id: int
     branch_id: int
+    clinic_id: Optional[int] = Field(default=None, gt=0)
     license_number: str = Field(..., min_length=3, max_length=100)
     years_of_experience: int = Field(..., ge=0)
 
@@ -15,6 +16,7 @@ class DoctorCreateSchema(BaseModel):
 class DoctorUpdateSchema(BaseModel):
     specialty_id: Optional[int] = None
     branch_id: Optional[int] = None
+    clinic_id: Optional[int] = Field(default=None, gt=0)
     license_number: Optional[str] = Field(default=None, min_length=3, max_length=100)
     years_of_experience: Optional[int] = Field(default=None, ge=0)
     is_active: Optional[bool] = None
@@ -25,6 +27,7 @@ class DoctorResponseSchema(BaseModel):
     user_id: int
     specialty_id: int
     branch_id: int
+    clinic_id: Optional[int] = None
     license_number: str
     years_of_experience: int
     is_active: bool

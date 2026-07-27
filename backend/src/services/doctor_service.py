@@ -15,6 +15,15 @@ from src.core.query_utils import build_where_clause, paginate
 class DoctorService:
 
     @staticmethod
+    def _check_clinic_exists_and_active(cursor, clinic_id: int) -> None:
+        cursor.execute(
+            "SELECT clinic_id FROM [Clinic] WHERE clinic_id = ? AND is_active = 1",
+            (clinic_id,),
+        )
+        if not cursor.fetchone():
+            raise Errors.clinic_not_found()
+
+    @staticmethod
     @handle_db_errors("Failed to create doctor")
     def create_doctor(doctor_data: DoctorCreateSchema) -> None:
 
@@ -45,6 +54,12 @@ class DoctorService:
             if not cursor.fetchone():
                 raise Errors.branch_not_found()
 
+            # Check clinic exists and is active (only if one was provided)
+            if doctor_data.clinic_id is not None:
+                DoctorService._check_clinic_exists_and_active(
+                    cursor, doctor_data.clinic_id
+                )
+
             # Check user isn't already a doctor
             cursor.execute(
                 "SELECT doctor_id FROM [Doctor] WHERE user_id = ?",
@@ -64,13 +79,14 @@ class DoctorService:
             cursor.execute(
                 """
                 INSERT INTO [Doctor]
-                (user_id, specialty_id, branch_id, license_number, years_of_experience)
-                VALUES (?, ?, ?, ?, ?)
+                (user_id, specialty_id, branch_id, clinic_id, license_number, years_of_experience)
+                VALUES (?, ?, ?, ?, ?, ?)
                 """,
                 (
                     doctor_data.user_id,
                     doctor_data.specialty_id,
                     doctor_data.branch_id,
+                    doctor_data.clinic_id,
                     doctor_data.license_number,
                     doctor_data.years_of_experience,
                 ),
@@ -87,7 +103,8 @@ class DoctorService:
             # Fetch current row
             cursor.execute(
                 """
-                SELECT specialty_id, branch_id, license_number, years_of_experience, is_active
+                SELECT specialty_id, branch_id, clinic_id, license_number,
+                       years_of_experience, is_active
                 FROM [Doctor]
                 WHERE doctor_id = ?
                 """,
@@ -103,6 +120,7 @@ class DoctorService:
 
             specialty_id = fields.get("specialty_id", row.specialty_id)
             branch_id = fields.get("branch_id", row.branch_id)
+            clinic_id = fields.get("clinic_id", row.clinic_id)
             license_number = fields.get("license_number", row.license_number)
             years_of_experience = fields.get(
                 "years_of_experience", row.years_of_experience
@@ -127,6 +145,12 @@ class DoctorService:
                 if not cursor.fetchone():
                     raise Errors.branch_not_found()
 
+            # Check clinic exists and is active only if it changed to a
+            # non-null value. Setting clinic_id explicitly to null
+            # (unassigning the doctor) needs no lookup.
+            if clinic_id != row.clinic_id and clinic_id is not None:
+                DoctorService._check_clinic_exists_and_active(cursor, clinic_id)
+
             # Check license number uniqueness only if it changed
             if license_number != row.license_number:
                 cursor.execute(
@@ -140,13 +164,14 @@ class DoctorService:
                 """
                 UPDATE [Doctor]
                 SET
-                    specialty_id = ?, branch_id = ?, license_number = ?,
+                    specialty_id = ?, branch_id = ?, clinic_id = ?, license_number = ?,
                     years_of_experience = ?, is_active = ?, updated_at = GETDATE()
                 WHERE doctor_id = ?
                 """,
                 (
                     specialty_id,
                     branch_id,
+                    clinic_id,
                     license_number,
                     years_of_experience,
                     is_active,
@@ -165,7 +190,7 @@ class DoctorService:
             cursor.execute(
                 """
                 SELECT
-                    doctor_id, user_id, specialty_id, branch_id,
+                    doctor_id, user_id, specialty_id, branch_id, clinic_id,
                     license_number, years_of_experience, is_active,
                     created_at, updated_at
                 FROM [Doctor]
@@ -183,6 +208,7 @@ class DoctorService:
                 user_id=row.user_id,
                 specialty_id=row.specialty_id,
                 branch_id=row.branch_id,
+                clinic_id=row.clinic_id,
                 license_number=row.license_number,
                 years_of_experience=row.years_of_experience,
                 is_active=row.is_active,
@@ -197,12 +223,14 @@ class DoctorService:
         page_size: int = 20,
         specialty_id: Optional[int] = None,
         branch_id: Optional[int] = None,
+        clinic_id: Optional[int] = None,
     ) -> PaginatedResponse[DoctorResponseSchema]:
 
         where_clause, params = build_where_clause(
             [
                 ("specialty_id = ?", specialty_id),
                 ("branch_id = ?", branch_id),
+                ("clinic_id = ?", clinic_id),
             ]
         )
 
@@ -219,7 +247,7 @@ class DoctorService:
             cursor.execute(
                 f"""
                 SELECT
-                    doctor_id, user_id, specialty_id, branch_id,
+                    doctor_id, user_id, specialty_id, branch_id, clinic_id,
                     license_number, years_of_experience, is_active,
                     created_at, updated_at
                 FROM [Doctor]
@@ -237,6 +265,7 @@ class DoctorService:
                     user_id=row.user_id,
                     specialty_id=row.specialty_id,
                     branch_id=row.branch_id,
+                    clinic_id=row.clinic_id,
                     license_number=row.license_number,
                     years_of_experience=row.years_of_experience,
                     is_active=row.is_active,

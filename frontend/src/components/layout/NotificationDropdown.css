@@ -132,5 +132,7 @@
     animation: dropdownShow 0.25s ease;
 
     z-index: 9999;
+
+    background: rgba(255, 255, 255, 1);
   }
 }

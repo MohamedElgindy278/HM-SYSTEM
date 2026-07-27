@@ -46,11 +46,12 @@ def get_all_doctors(
     page_size: int = Query(default=20, ge=1, le=100),
     specialty_id: Optional[int] = Query(default=None),
     branch_id: Optional[int] = Query(default=None),
+    clinic_id: Optional[int] = Query(default=None),
 ):
 
     return Responses.ok(
         data=DoctorService.get_all_doctors(
-            start_num, page_size, specialty_id, branch_id
+            start_num, page_size, specialty_id, branch_id, clinic_id
         ),
     )
 

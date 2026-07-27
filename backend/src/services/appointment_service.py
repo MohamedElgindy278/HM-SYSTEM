@@ -38,12 +38,15 @@ class AppointmentService:
 
     @staticmethod
     @handle_db_errors("Failed to retrieve available slots")
-    def get_available_slots(doctor_id: int, appointment_date: date) -> List[time]:
+    def get_available_slots(
+        doctor_id: int,
+        appointment_date: date,
+        exclude_appointment_id: Optional[int] = None,
+    ) -> List[time]:
 
         with get_pyodbc_connection() as conn:
             cursor = conn.cursor()
 
-            # Check doctor exists, is active, and get appointment duration
             cursor.execute(
                 """
                 SELECT d.is_active, s.appointment_duration
@@ -62,10 +65,8 @@ class AppointmentService:
                 raise Errors.doctor_not_available()
 
             appointment_duration = row.appointment_duration
-
             day_of_week = appointment_date.strftime("%A")
 
-            # Get doctor schedule for that day
             cursor.execute(
                 """
                 SELECT start_time, end_time
@@ -87,17 +88,31 @@ class AppointmentService:
                 appointment_duration=appointment_duration,
             )
 
-            # Get already reserved slots
-            cursor.execute(
-                """
-                SELECT appointment_date
-                FROM [Appointment]
-                WHERE doctor_id = ?
-                AND CAST(appointment_date AS DATE) = ?
-                AND status = 'Scheduled'
-                """,
-                (doctor_id, appointment_date),
-            )
+            # Exclude the appointment being rescheduled so it can't block itself
+            if exclude_appointment_id is not None:
+                cursor.execute(
+                    """
+                    SELECT appointment_date
+                    FROM [Appointment]
+                    WHERE doctor_id = ?
+                    AND CAST(appointment_date AS DATE) = ?
+                    AND status = 'Scheduled'
+                    AND appointment_id <> ?
+                    """,
+                    (doctor_id, appointment_date, exclude_appointment_id),
+                )
+            else:
+                cursor.execute(
+                    """
+                    SELECT appointment_date
+                    FROM [Appointment]
+                    WHERE doctor_id = ?
+                    AND CAST(appointment_date AS DATE) = ?
+                    AND status = 'Scheduled'
+                    """,
+                    (doctor_id, appointment_date),
+                )
+
             reserved_slots = {r.appointment_date.time() for r in cursor.fetchall()}
 
             return [slot for slot in slots if slot not in reserved_slots]
@@ -109,7 +124,6 @@ class AppointmentService:
         with get_pyodbc_connection() as conn:
             cursor = conn.cursor()
 
-            # Check patient exists
             cursor.execute(
                 "SELECT patient_id FROM [Patient] WHERE patient_id = ? AND is_deleted = 0",
                 (appointment_data.patient_id,),
@@ -117,7 +131,34 @@ class AppointmentService:
             if not cursor.fetchone():
                 raise Errors.patient_not_found()
 
-            # Check appointment date is in the future
+            # Doctor must exist AND have a clinic assigned - that clinic
+            # becomes the appointment's clinic_id snapshot automatically.
+            cursor.execute(
+                """
+                SELECT d.clinic_id, c.is_active AS clinic_is_active
+                FROM [Doctor] d
+                LEFT JOIN [Clinic] c ON d.clinic_id = c.clinic_id
+                WHERE d.doctor_id = ?
+                """,
+                (appointment_data.doctor_id,),
+            )
+            doctor_row = cursor.fetchone()
+
+            if not doctor_row:
+                raise Errors.doctor_not_found()
+
+            if doctor_row.clinic_id is None:
+                raise Errors.validation_error(
+                    "This doctor has no clinic assigned yet",
+                )
+
+            if not doctor_row.clinic_is_active:
+                raise Errors.validation_error(
+                    "This doctor's assigned clinic is not active",
+                )
+
+            clinic_id = doctor_row.clinic_id
+
             if appointment_data.appointment_date <= datetime.now():
                 raise Errors.invalid_appointment_date()
 
@@ -129,7 +170,6 @@ class AppointmentService:
             if appointment_data.appointment_date.time() not in available_slots:
                 raise Errors.doctor_not_available()
 
-            # Check patient doesn't already have an appointment at this exact time
             cursor.execute(
                 """
                 SELECT appointment_id
@@ -147,12 +187,13 @@ class AppointmentService:
                 cursor.execute(
                     """
                     INSERT INTO [Appointment]
-                    (patient_id, doctor_id, appointment_date, status, notes)
-                    VALUES (?, ?, ?, 'Scheduled', ?)
+                    (patient_id, doctor_id, clinic_id, appointment_date, status, notes)
+                    VALUES (?, ?, ?, ?, 'Scheduled', ?)
                     """,
                     (
                         appointment_data.patient_id,
                         appointment_data.doctor_id,
+                        clinic_id,
                         appointment_data.appointment_date,
                         appointment_data.notes,
                     ),
@@ -177,7 +218,7 @@ class AppointmentService:
 
             cursor.execute(
                 """
-                SELECT patient_id, doctor_id, appointment_date, status, notes
+                SELECT patient_id, doctor_id, clinic_id, appointment_date, status, notes
                 FROM [Appointment]
                 WHERE appointment_id = ?
                 """,
@@ -194,23 +235,55 @@ class AppointmentService:
             appointment_date = fields.get("appointment_date", row.appointment_date)
             notes = fields.get("notes", row.notes)
 
-            slot_changed = (
+            doctor_or_time_changed = (
                 doctor_id != row.doctor_id or appointment_date != row.appointment_date
             )
 
-            # Only Scheduled appointments can be rescheduled
-            if row.status != "Scheduled" and slot_changed:
+            if row.status != "Scheduled" and doctor_or_time_changed:
                 raise Errors.validation_error(
                     "Cannot reschedule a completed or cancelled appointment",
                 )
 
-            if slot_changed:
+            # clinic_id stays untouched unless the doctor actually changes
+            clinic_id = row.clinic_id
+
+            if doctor_id != row.doctor_id:
+                cursor.execute(
+                    """
+                    SELECT d.clinic_id, c.is_active AS clinic_is_active
+                    FROM [Doctor] d
+                    LEFT JOIN [Clinic] c ON d.clinic_id = c.clinic_id
+                    WHERE d.doctor_id = ?
+                    """,
+                    (doctor_id,),
+                )
+                doctor_row = cursor.fetchone()
+
+                if not doctor_row:
+                    raise Errors.doctor_not_found()
+
+                if doctor_row.clinic_id is None:
+                    raise Errors.validation_error(
+                        "This doctor has no clinic assigned yet",
+                    )
+
+                if not doctor_row.clinic_is_active:
+                    raise Errors.validation_error(
+                        "This doctor's assigned clinic is not active",
+                    )
+
+                clinic_id = (
+                    doctor_row.clinic_id
+                )  # re-snapshot to the new doctor's clinic
+
+            if doctor_or_time_changed:
                 if appointment_date <= datetime.now():
                     raise Errors.invalid_appointment_date()
 
                 available_slots = AppointmentService.get_available_slots(
                     doctor_id,
                     appointment_date.date(),
+                    exclude_appointment_id=appointment_id,
                 )
                 if appointment_date.time() not in available_slots:
                     raise Errors.doctor_not_available()
@@ -233,10 +306,10 @@ class AppointmentService:
                 cursor.execute(
                     """
                     UPDATE [Appointment]
-                    SET doctor_id = ?, appointment_date = ?, notes = ?, updated_at = GETDATE()
+                    SET doctor_id = ?, clinic_id = ?, appointment_date = ?, notes = ?, updated_at = GETDATE()
                     WHERE appointment_id = ?
                     """,
-                    (doctor_id, appointment_date, notes, appointment_id),
+                    (doctor_id, clinic_id, appointment_date, notes, appointment_id),
                 )
                 conn.commit()
             except IntegrityError as e:
@@ -255,7 +328,7 @@ class AppointmentService:
 
             cursor.execute(
                 """
-                SELECT appointment_id, patient_id, doctor_id, appointment_date,
+                SELECT appointment_id, patient_id, doctor_id, clinic_id, appointment_date,
                        status, notes, created_at, updated_at
                 FROM [Appointment]
                 WHERE appointment_id = ?
@@ -271,6 +344,7 @@ class AppointmentService:
                 appointment_id=row.appointment_id,
                 patient_id=row.patient_id,
                 doctor_id=row.doctor_id,
+                clinic_id=row.clinic_id,
                 appointment_date=row.appointment_date,
                 status=row.status,
                 notes=row.notes,
@@ -312,7 +386,7 @@ class AppointmentService:
 
             cursor.execute(
                 f"""
-                SELECT appointment_id, patient_id, doctor_id, appointment_date,
+                SELECT appointment_id, patient_id, doctor_id, clinic_id, appointment_date,
                     status, notes, created_at, updated_at
                 FROM [Appointment]
                 {where_clause}
@@ -328,6 +402,7 @@ class AppointmentService:
                     appointment_id=row.appointment_id,
                     patient_id=row.patient_id,
                     doctor_id=row.doctor_id,
+                    clinic_id=row.clinic_id,
                     appointment_date=row.appointment_date,
                     status=row.status,
                     notes=row.notes,

@@ -69,10 +69,10 @@ export default function Login() {
 
       setShowSuccess(true);
 
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       const message =
-        error.response?.data?.detail?.message || 'Something went wrong. Please try again.';
+        error.message || 'Something went wrong. Please try again.';
 
       setErrorMessage(message);
 
@@ -95,7 +95,7 @@ export default function Login() {
       setAuthView(AUTH_VIEW.FORGOT_OTP);
     } catch (error) {
       const message =
-        error.response?.data?.detail?.message || 'Something went wrong. Please try again.';
+        error.message || 'Something went wrong. Please try again.';
 
       setErrorMessage(message);
     } finally {
@@ -113,7 +113,7 @@ export default function Login() {
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (error) {
       const message =
-        error.response?.data?.detail?.message || 'Something went wrong. Please try again.';
+        error.message || 'Something went wrong. Please try again.';
 
       setErrorMessage(message);
     }
@@ -133,7 +133,7 @@ export default function Login() {
 
       setAuthView(AUTH_VIEW.RESET);
     } catch (error) {
-      const message = error.response?.data?.detail?.message || 'Invalid OTP.';
+      const message = error.message || 'Invalid OTP.';
 
       setErrorMessage(message);
     } finally {
@@ -178,7 +178,7 @@ export default function Login() {
 
       setAuthView(AUTH_VIEW.LOGIN);
     } catch (error) {
-      const message = error.response?.data?.detail?.message || 'Something went wrong.';
+      const message = error.message || 'Something went wrong.';
 
       setErrorMessage(message);
     } finally {
