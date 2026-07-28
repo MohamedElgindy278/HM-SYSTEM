@@ -1,5 +1,5 @@
 /* ==========================================================
-   Sidebar
+   Sidebar (متوافق مع Design System)
 ========================================================== */
 
 .sidebar {
@@ -8,9 +8,9 @@
   left: 0;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
-  border-right: 1px solid #e2e8f0;
-  transition: width 0.28s ease;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  transition: width var(--dur-base) ease;
   overflow-x: hidden;
   overflow-y: hidden;
   z-index: 100;
@@ -38,7 +38,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 14px;
-  border-bottom: 1px solid #edf2f7;
+  border-bottom: 1px solid var(--color-bg);
   gap: 8px;
 }
 
@@ -52,13 +52,13 @@
 .logo-icon {
   width: 48px;
   height: 48px;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #2563eb, #06b6d4);
-  color: white;
-  font-size: 22px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #fff;
+  font-size: var(--font-size-lg);
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -67,20 +67,20 @@
   overflow: hidden;
   white-space: nowrap;
   transition:
-    opacity 0.2s ease,
-    width 0.2s ease;
+    opacity var(--dur-base) ease,
+    width var(--dur-base) ease;
 }
 
 .logo-text h2 {
-  font-size: 18px;
+  font-size: var(--font-size-md);
   font-weight: 700;
-  color: #0f172a;
+  color: var(--color-title);
   margin: 0;
 }
 
 .logo-text span {
-  font-size: 12px;
-  color: #94a3b8;
+  font-size: var(--font-size-xs);
+  color: var(--color-muted);
 }
 
 .sidebar.collapsed .logo-text {
@@ -97,21 +97,29 @@
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 9px;
-  background: #f8fafc;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #64748b;
-  transition: 0.2s ease;
+  color: var(--color-text);
+  transition:
+    background var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    transform var(--dur-fast) ease;
   flex-shrink: 0;
 }
 
 .collapse-btn:hover,
 .mobile-close-btn:hover {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
+}
+
+.collapse-btn:active,
+.mobile-close-btn:active {
+  transform: translateY(1px);
 }
 
 .mobile-close-btn {
@@ -130,7 +138,7 @@
 }
 
 .sidebar-section {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 
 .sidebar-section:last-child {
@@ -139,19 +147,19 @@
 
 .section-title {
   display: block;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--color-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 8px;
-  padding-left: 12px;
+  margin-bottom: var(--space-sm);
+  padding-left: var(--space-sm);
   white-space: nowrap;
   overflow: hidden;
   transition:
-    opacity 0.2s ease,
-    height 0.2s ease,
-    margin 0.2s ease;
+    opacity var(--dur-base) ease,
+    height var(--dur-base) ease,
+    margin var(--dur-base) ease;
 }
 
 .sidebar.collapsed .section-title {
@@ -170,27 +178,27 @@
   align-items: center;
   gap: 14px;
   padding: 12px 14px;
-  border-radius: 12px;
-  color: #475569;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
   text-decoration: none;
-  font-size: 14px;
+  font-size: var(--font-size-base);
   font-weight: 600;
   transition:
-    background 0.18s ease,
-    color 0.18s ease;
+    background var(--dur-fast) ease,
+    color var(--dur-fast) ease;
   margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
 }
 
 .sidebar-link:hover {
-  background: #f1f5f9;
-  color: #2563eb;
+  background: var(--color-bg);
+  color: var(--color-primary);
 }
 
 .sidebar-link.active {
   background: linear-gradient(90deg, rgba(37, 99, 235, 0.1), rgba(6, 182, 212, 0.06));
-  color: #2563eb;
+  color: var(--color-primary);
 }
 
 .sidebar-link.active::before {
@@ -201,18 +209,19 @@
   bottom: 8px;
   width: 3px;
   border-radius: 0 4px 4px 0;
-  background: #2563eb;
+  background: var(--color-primary);
 }
 
 .sidebar-icon {
   flex-shrink: 0;
+  color: currentColor;
 }
 
 .sidebar-link-label {
   overflow: hidden;
   transition:
-    opacity 0.2s ease,
-    width 0.2s ease;
+    opacity var(--dur-base) ease,
+    width var(--dur-base) ease;
 }
 
 .sidebar.collapsed .sidebar-link-label {
@@ -230,8 +239,8 @@
 ========================================================== */
 
 .sidebar-footer {
-  padding: 16px 14px;
-  border-top: 1px solid #edf2f7;
+  padding: var(--space-md) 14px;
+  border-top: 1px solid var(--color-bg);
 }
 
 .logout-btn {
@@ -242,18 +251,27 @@
   padding: 12px 14px;
   border: none;
   background: transparent;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  color: #ef4444;
-  font-size: 14px;
+  color: var(--color-danger);
+  font-size: var(--font-size-base);
   font-weight: 600;
-  transition: 0.2s ease;
+  font-family: var(--font-family);
+  transition:
+    background var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    transform var(--dur-fast) ease;
   white-space: nowrap;
   overflow: hidden;
 }
 
 .logout-btn:hover {
-  background: #fef2f2;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.logout-btn:active {
+  transform: translateY(1px);
 }
 
 .sidebar.collapsed .logout-btn {
@@ -274,12 +292,12 @@
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
-  border-radius: 20px;
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb:hover {
-  background: #cbd5e1;
+  background: var(--color-muted);
 }
 
 /* ==========================================================
@@ -316,7 +334,7 @@
     left: 0;
     width: 280px;
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    transition: transform var(--dur-base) ease;
   }
 
   .sidebar.mobile-open {
@@ -354,7 +372,7 @@
     z-index: 99;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
+    transition: opacity var(--dur-base) ease;
   }
 
   .sidebar-overlay.show {

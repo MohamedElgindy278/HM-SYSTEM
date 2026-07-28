@@ -1,15 +1,14 @@
-/* ==========================================================================
-   AUTH LAYOUT — LEFT BRAND PANEL
-   File: src/features/auth/components/AuthLayout.css
-   ========================================================================== */
+/* ==========================================================
+   AuthLayout.css — Brand Panel + Page Grid
+   ========================================================== */
 
 .login-screen {
   display: grid;
   grid-template-columns: 1.05fr 1fr;
   min-height: 100vh;
-  font-family: 'Inter', sans-serif;
-  background: #f8fafc;
-  color: #0f172a;
+  font-family: var(--font-family);
+  background: var(--color-bg);
+  color: var(--color-title);
 }
 
 /* ---------- Brand panel ---------- */
@@ -19,7 +18,7 @@
   background:
     radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 45%),
     radial-gradient(circle at 85% 80%, rgba(16, 185, 129, 0.25) 0%, transparent 50%),
-    linear-gradient(155deg, #0f2e7a 0%, #1746c9 38%, #2563eb 62%, #0891b2 100%);
+    linear-gradient(155deg, #0f2e7a 0%, #1746c9 38%, var(--color-primary) 62%, #0891b2 100%);
   padding: 56px 64px;
   display: flex;
   flex-direction: column;
@@ -39,7 +38,7 @@
   pointer-events: none;
 }
 
-/* ---------- Top brand ---------- */
+/* ---------- Brand top ---------- */
 .brand-top {
   display: flex;
   align-items: center;
@@ -50,7 +49,7 @@
 .brand-mark {
   width: 44px;
   height: 44px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.25);
   display: flex;
@@ -61,7 +60,7 @@
 
 .brand-name {
   font-weight: 700;
-  font-size: 19px;
+  font-size: var(--font-size-lg);
   letter-spacing: 0.2px;
 }
 
@@ -70,7 +69,7 @@
   font-weight: 600;
 }
 
-/* ---------- Middle content ---------- */
+/* ---------- Brand middle ---------- */
 .brand-middle {
   z-index: 2;
   max-width: 460px;
@@ -79,8 +78,8 @@
 .eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -88,7 +87,7 @@
   background: rgba(16, 185, 129, 0.18);
   border: 1px solid rgba(16, 185, 129, 0.35);
   padding: 6px 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   margin-bottom: 26px;
 }
 
@@ -96,7 +95,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10b981;
+  background: var(--color-success);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
 }
 
@@ -116,28 +115,28 @@
 }
 
 .brand-description {
-  font-size: 15.5px;
+  font-size: var(--font-size-md);
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.82);
   font-weight: 400;
   margin: 0 0 34px 0;
 }
 
-/* ---------- Stats ---------- */
+/* ---------- Brand stats ---------- */
 .brand-stats {
   display: flex;
-  gap: 32px;
+  gap: var(--space-xl);
 }
 
 .stat-number {
-  font-size: 22px;
+  font-size: var(--font-size-xl);
   font-weight: 700;
   color: #fff;
   letter-spacing: -0.01em;
 }
 
 .stat-label {
-  font-size: 12.5px;
+  font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.68);
   margin-top: 2px;
 }
@@ -152,7 +151,7 @@
   z-index: 2;
   margin-top: 38px;
   padding: 18px 20px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.07);
   border: 1px solid rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(8px);
@@ -171,46 +170,37 @@
 }
 
 .ecg-caption {
-  font-size: 11.5px;
+  font-size: var(--font-size-xs);
   color: rgba(255, 255, 255, 0.55);
-  margin-top: 8px;
+  margin-top: var(--space-sm);
   letter-spacing: 0.03em;
 }
 
-/* ---------- Bottom ---------- */
+/* ---------- Brand bottom ---------- */
 .brand-bottom {
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 12.5px;
+  font-size: var(--font-size-sm);
   color: rgba(255, 255, 255, 0.55);
 }
 
 .brand-bottom-right {
   display: flex;
-  gap: 18px;
+  gap: var(--space-md);
 }
 
 .trust-badge {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-sm);
 }
 
 .trust-icon {
   width: 15px;
   height: 15px;
   stroke: rgba(255, 255, 255, 0.6);
-}
-
-/* ---------- Right panel container ---------- */
-.form-panel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  position: relative;
 }
 
 /* ---------- Animations ---------- */
@@ -220,5 +210,453 @@
   }
   to {
     stroke-dashoffset: 0;
+  }
+}
+
+/* ==========================================================
+   Responsive Breakpoints — Page Grid + Brand Panel only
+   ========================================================== */
+
+@media screen and (min-width: 1920px) {
+  .brand-panel {
+    padding: 64px 80px;
+  }
+
+  .brand-middle {
+    max-width: 520px;
+  }
+
+  .headline {
+    font-size: 44px;
+  }
+}
+
+@media screen and (max-width: 1919px) {
+  .brand-panel {
+    padding: 48px 56px;
+  }
+
+  .headline {
+    font-size: 38px;
+  }
+
+  .brand-description {
+    font-size: var(--font-size-md);
+  }
+}
+
+@media screen and (max-width: 1439px) {
+  .brand-panel {
+    padding: 40px 48px;
+  }
+
+  .brand-middle {
+    max-width: 400px;
+  }
+
+  .headline {
+    font-size: 34px;
+  }
+
+  .brand-description {
+    font-size: var(--font-size-base);
+    margin-bottom: 28px;
+  }
+
+  .brand-stats {
+    gap: var(--space-lg);
+  }
+
+  .stat-number {
+    font-size: var(--font-size-lg);
+  }
+
+  .ecg-wrapper {
+    margin-top: var(--space-xl);
+    padding: var(--space-md) var(--space-md);
+  }
+}
+
+@media screen and (max-width: 1279px) {
+  .login-screen {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .brand-panel {
+    padding: 36px 40px;
+  }
+
+  .brand-middle {
+    max-width: 100%;
+  }
+
+  .headline {
+    font-size: 30px;
+  }
+
+  .brand-description {
+    font-size: var(--font-size-base);
+  }
+
+  .brand-stats {
+    gap: var(--space-lg);
+    flex-wrap: wrap;
+  }
+
+  .stat-number {
+    font-size: var(--font-size-lg);
+  }
+
+  .stat-divider {
+    display: none;
+  }
+
+  .ecg-wrapper {
+    margin-top: var(--space-lg);
+    padding: var(--space-md) var(--space-md);
+  }
+}
+
+@media screen and (max-width: 1023px) {
+  .login-screen {
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+  }
+
+  .brand-panel {
+    padding: var(--space-xl) var(--space-xl);
+  }
+
+  .brand-top {
+    gap: var(--space-sm);
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+  }
+
+  .brand-name {
+    font-size: var(--font-size-md);
+  }
+
+  .eyebrow {
+    font-size: var(--font-size-xs);
+    padding: 5px 12px;
+    margin-bottom: var(--space-lg);
+    margin-top: var(--space-sm);
+  }
+
+  .headline {
+    font-size: 26px;
+    margin-bottom: 14px;
+  }
+
+  .brand-description {
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-lg);
+  }
+
+  .brand-stats {
+    gap: var(--space-md);
+  }
+
+  .stat-number {
+    font-size: var(--font-size-md);
+  }
+
+  .stat-label {
+    font-size: var(--font-size-xs);
+  }
+
+  .ecg-wrapper {
+    margin-top: var(--space-lg);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .ecg-caption {
+    font-size: var(--font-size-xs);
+  }
+
+  .brand-bottom {
+    font-size: var(--font-size-xs);
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+
+  .brand-bottom-right {
+    gap: var(--space-sm);
+  }
+
+  .trust-icon {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .login-screen {
+    grid-template-columns: 1fr;
+    min-height: 100vh;
+  }
+
+  .brand-panel {
+    padding: 28px 20px;
+    min-height: 45vh;
+  }
+
+  .brand-top {
+    gap: var(--space-sm);
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+  }
+
+  .brand-name {
+    font-size: var(--font-size-md);
+  }
+
+  .brand-middle {
+    max-width: 100%;
+  }
+
+  .eyebrow {
+    font-size: var(--font-size-xs);
+    padding: 4px 10px;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    margin-top: var(--space-sm);
+  }
+
+  .eyebrow-dot {
+    width: 5px;
+    height: 5px;
+  }
+
+  .headline {
+    font-size: clamp(22px, 5vw, 28px);
+    margin-bottom: var(--space-sm);
+  }
+
+  .brand-description {
+    font-size: clamp(12.5px, 2.5vw, 14px);
+    margin-bottom: var(--space-lg);
+  }
+
+  .brand-stats {
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .stat-number {
+    font-size: var(--font-size-md);
+  }
+
+  .stat-label {
+    font-size: var(--font-size-xs);
+  }
+
+  .stat-divider {
+    display: none;
+  }
+
+  .ecg-wrapper {
+    margin-top: var(--space-lg);
+    padding: var(--space-sm) var(--space-sm);
+    border-radius: var(--radius-sm);
+  }
+
+  .ecg-caption {
+    font-size: var(--font-size-xs);
+    margin-top: var(--space-sm);
+  }
+
+  .brand-bottom {
+    font-size: var(--font-size-xs);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+
+  .brand-bottom-right {
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  .trust-badge {
+    font-size: var(--font-size-xs);
+  }
+
+  .trust-icon {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media screen and (max-width: 374px) {
+  .brand-panel {
+    padding: var(--space-lg) var(--space-md);
+    min-height: 40vh;
+  }
+
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+  }
+
+  .brand-name {
+    font-size: var(--font-size-base);
+  }
+
+  .headline {
+    font-size: 20px;
+  }
+
+  .brand-stats {
+    gap: var(--space-sm);
+  }
+
+  .stat-number {
+    font-size: var(--font-size-base);
+  }
+
+  .stat-label {
+    font-size: var(--font-size-xs);
+  }
+}
+
+@media screen and (max-height: 700px) and (max-width: 767px) {
+  .brand-panel {
+    min-height: 35vh;
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .brand-middle {
+    max-width: 100%;
+  }
+
+  .eyebrow {
+    margin-bottom: var(--space-sm);
+    padding: 3px 10px;
+    font-size: var(--font-size-xs);
+    margin-top: var(--space-sm);
+  }
+
+  .headline {
+    font-size: 20px;
+    margin-bottom: var(--space-sm);
+  }
+
+  .brand-description {
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  .brand-stats {
+    gap: var(--space-sm);
+  }
+
+  .stat-number {
+    font-size: var(--font-size-base);
+  }
+
+  .stat-label {
+    font-size: var(--font-size-xs);
+  }
+
+  .ecg-wrapper {
+    margin-top: var(--space-sm);
+    padding: var(--space-sm) var(--space-sm);
+  }
+
+  .ecg-caption {
+    font-size: var(--font-size-xs);
+    margin-top: 4px;
+  }
+}
+
+@media screen and (max-height: 500px) and (max-width: 767px) and (orientation: landscape) {
+  .login-screen {
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+  }
+
+  .brand-panel {
+    padding: var(--space-md) var(--space-lg);
+    min-height: 100vh;
+  }
+
+  .brand-top {
+    gap: var(--space-sm);
+  }
+
+  .brand-mark {
+    width: 28px;
+    height: 28px;
+  }
+
+  .brand-name {
+    font-size: var(--font-size-sm);
+  }
+
+  .brand-middle {
+    max-width: 100%;
+  }
+
+  .eyebrow {
+    font-size: var(--font-size-xs);
+    padding: 2px 8px;
+    margin-bottom: var(--space-sm);
+    margin-top: var(--space-sm);
+  }
+
+  .eyebrow-dot {
+    width: 4px;
+    height: 4px;
+  }
+
+  .headline {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .brand-description {
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  .brand-stats {
+    gap: var(--space-sm);
+  }
+
+  .stat-number {
+    font-size: var(--font-size-sm);
+  }
+
+  .stat-label {
+    font-size: var(--font-size-xs);
+  }
+
+  .ecg-wrapper {
+    margin-top: var(--space-sm);
+    padding: 6px 10px;
+  }
+
+  .ecg-caption {
+    font-size: var(--font-size-xs);
+    margin-top: 4px;
+  }
+
+  .brand-bottom {
+    font-size: var(--font-size-xs);
+  }
+
+  .trust-icon {
+    width: 10px;
+    height: 10px;
   }
 }

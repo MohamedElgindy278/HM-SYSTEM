@@ -1,3 +1,7 @@
+/* ==========================================================
+   Layout (متوافق مع Design System)
+========================================================== */
+
 html,
 body,
 #root {
@@ -11,7 +15,7 @@ body,
 =========================== */
 
 .layout {
-  background: #f8fafc;
+  background: var(--color-bg);
   display: flex;
   height: 100vh;
   width: 100%;
@@ -29,6 +33,7 @@ body,
   height: 100vh;
   overflow: hidden;
 }
+
 /* ===========================
    Page Content
 =========================== */
@@ -37,6 +42,8 @@ body,
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  padding: var(--space-lg);
+  transition: padding var(--dur-base) ease;
 }
 
 /* ===========================
@@ -44,16 +51,21 @@ body,
 =========================== */
 
 .layout-content::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+}
+
+.layout-content::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .layout-content::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 100px;
+  background: var(--color-border);
+  border-radius: var(--radius-pill);
+  transition: background var(--dur-fast) ease;
 }
 
 .layout-content::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--color-muted);
 }
 
 /* ===========================
@@ -62,7 +74,7 @@ body,
 
 @media (max-width: 1024px) {
   .layout-content {
-    padding: 20px;
+    padding: var(--space-lg);
   }
 }
 
@@ -76,12 +88,12 @@ body,
   }
 
   .layout-content {
-    padding: 16px;
+    padding: var(--space-md);
   }
 }
 
 @media (max-width: 480px) {
   .layout-content {
-    padding: 14px;
+    padding: var(--space-md);
   }
 }

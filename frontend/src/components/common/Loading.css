@@ -3,8 +3,8 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  color: #94a3b8;
-  font-size: 13px;
+  color: var(--color-muted);
+  font-size: var(--font-size-base);
   padding: 20px;
 }
 
@@ -15,8 +15,8 @@
 .loading-spinner {
   border-radius: 50%;
   border-style: solid;
-  border-color: #e2e8f0;
-  border-top-color: #2563eb;
+  border-color: var(--color-border);
+  border-top-color: var(--color-primary);
   animation: loading-spin 0.7s linear infinite;
   flex-shrink: 0;
 }

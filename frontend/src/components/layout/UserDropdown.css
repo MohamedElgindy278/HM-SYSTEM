@@ -1,3 +1,7 @@
+/* ==========================================================
+   User Dropdown (متوافق مع Design System)
+========================================================== */
+
 .user-dropdown {
   position: relative;
 }
@@ -8,43 +12,36 @@
   display: flex;
   align-items: center;
   gap: 14px;
-
   padding: 6px 10px;
-
   background: transparent;
-
   border: none;
-
-  border-radius: 14px;
-
+  border-radius: var(--radius-md);
   cursor: pointer;
-
-  transition: all 0.25s ease;
+  transition:
+    background var(--dur-fast) ease,
+    transform var(--dur-fast) ease;
 }
 
 .user-dropdown-trigger:hover {
   background: rgba(37, 99, 235, 0.06);
 }
 
+.user-dropdown-trigger:active {
+  transform: translateY(1px);
+}
+
 .user-avatar {
   width: 42px;
   height: 42px;
-
   border-radius: 50%;
-
-  background: linear-gradient(135deg, #2563eb, #06b6d4);
-
-  color: white;
-
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  font-size: 14px;
+  font-size: var(--font-size-base);
   font-weight: 700;
-
   flex-shrink: 0;
-
   box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18);
 }
 
@@ -52,31 +49,25 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-
   line-height: 1.2;
 }
 
 .user-info h4 {
   margin: 0;
-
-  font-size: 14px;
+  font-size: var(--font-size-base);
   font-weight: 700;
-
-  color: #0f172a;
+  color: var(--color-title);
 }
 
 .user-info span {
   margin-top: 2px;
-
-  font-size: 12px;
-
-  color: #64748b;
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
 }
 
 .dropdown-arrow {
-  color: #64748b;
-
-  transition: transform 0.25s ease;
+  color: var(--color-text);
+  transition: transform var(--dur-base) ease;
 }
 
 .dropdown-arrow.rotate {
@@ -87,27 +78,18 @@
 
 .dropdown-menu {
   position: absolute;
-
   right: 0;
   top: calc(100% + 12px);
-
   width: 240px;
-
   background: rgba(255, 255, 255, 0.82);
-
   backdrop-filter: blur(18px);
-
   border: 1px solid rgba(255, 255, 255, 0.7);
-
-  border-radius: 18px;
-
+  border-radius: var(--radius-lg);
   overflow: hidden;
-
   box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
+    var(--shadow-sm),
     0 20px 50px rgba(15, 23, 42, 0.12);
-
-  animation: dropdownShow 0.22s ease;
+  animation: dropdownShow var(--dur-base) ease;
   z-index: 999;
 }
 
@@ -115,63 +97,77 @@
 
 .dropdown-item {
   width: 100%;
-
   display: flex;
   align-items: center;
   gap: 12px;
-
   padding: 14px 18px;
-
   background: transparent;
-
   border: none;
-
   cursor: pointer;
-
-  font-family: inherit;
-
-  font-size: 14px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
   font-weight: 500;
-
-  color: #334155;
-
-  transition: all 0.2s ease;
+  color: var(--color-title);
+  transition:
+    background var(--dur-fast) ease,
+    color var(--dur-fast) ease;
+  text-decoration: none;
 }
 
 .dropdown-item svg {
-  color: #64748b;
+  color: var(--color-text);
+  flex-shrink: 0;
+  transition: color var(--dur-fast) ease;
 }
 
 .dropdown-item:hover {
-  background: #eff6ff;
-
-  color: #2563eb;
+  background: var(--color-info-bg);
+  color: var(--color-primary);
 }
 
 .dropdown-item:hover svg {
-  color: #2563eb;
+  color: var(--color-primary);
+}
+
+.dropdown-item:active {
+  transform: translateY(1px);
 }
 
 .dropdown-divider {
   height: 1px;
-
-  background: #e2e8f0;
-
+  background: var(--color-border);
   margin: 4px 0;
+}
+
+/* ================= Badge on items ================= */
+
+.dropdown-item .item-badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
 }
 
 /* ================= Logout ================= */
 
 .dropdown-item.logout {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 .dropdown-item.logout svg {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 .dropdown-item.logout:hover {
-  background: #fef2f2;
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.dropdown-item.logout:hover svg {
+  color: var(--color-danger-text);
 }
 
 /* ================= Animation ================= */
@@ -181,7 +177,6 @@
     opacity: 0;
     transform: translateY(-10px) scale(0.98);
   }
-
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -197,5 +192,6 @@
 
   .dropdown-menu {
     width: 220px;
+    right: -8px;
   }
 }

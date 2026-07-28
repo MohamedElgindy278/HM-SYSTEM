@@ -19,35 +19,29 @@ class PatientService:
         with get_pyodbc_connection() as conn:
             cursor = conn.cursor()
 
-            # Check MRN
-            cursor.execute(
-                "SELECT patient_id FROM [Patient] WHERE mrn = ?",
-                (patient_data.mrn,),
-            )
-            if cursor.fetchone():
-                raise Errors.patient_mrn_exists()
-
-            # Check national ID
+            # Check national ID only among active (non soft-deleted) patients
             if patient_data.national_id is not None:
                 cursor.execute(
-                    "SELECT patient_id FROM [Patient] WHERE national_id = ?",
+                    "SELECT patient_id FROM [Patient] WHERE national_id = ? AND is_deleted = 0",
                     (patient_data.national_id,),
                 )
                 if cursor.fetchone():
                     raise Errors.patient_national_id_exists()
 
+            # mrn is deliberately not inserted here - DF_Patient_Mrn fills
+            # a temporary '' value, then TR_CreateMRN overwrites it with
+            # the real 'MRN-00001' style identifier right after insert.
             cursor.execute(
                 """
                 INSERT INTO [Patient]
                 (
-                    mrn, first_name, last_name, date_of_birth, gender,
+                    first_name, last_name, date_of_birth, gender,
                     national_id, phone, address,
                     emergency_contact_name, emergency_contact_phone
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    patient_data.mrn,
                     patient_data.first_name,
                     patient_data.last_name,
                     patient_data.date_of_birth,
@@ -72,7 +66,7 @@ class PatientService:
             cursor.execute(
                 """
                 SELECT
-                    mrn, first_name, last_name, date_of_birth, gender,
+                    first_name, last_name, date_of_birth, gender,
                     national_id, phone, address,
                     emergency_contact_name, emergency_contact_phone
                 FROM [Patient]
@@ -89,7 +83,6 @@ class PatientService:
             # Merge sent fields with current values
             fields = patient_data.model_dump(exclude_unset=True)
 
-            mrn = fields.get("mrn", row.mrn)
             first_name = fields.get("first_name", row.first_name)
             last_name = fields.get("last_name", row.last_name)
             date_of_birth = fields.get("date_of_birth", row.date_of_birth)
@@ -104,19 +97,17 @@ class PatientService:
                 "emergency_contact_phone", row.emergency_contact_phone
             )
 
-            # Check MRN uniqueness only if it changed
-            if mrn != row.mrn:
-                cursor.execute(
-                    "SELECT patient_id FROM [Patient] WHERE mrn = ? AND patient_id <> ?",
-                    (mrn, patient_id),
-                )
-                if cursor.fetchone():
-                    raise Errors.patient_mrn_exists()
-
-            # Check national ID uniqueness only if it changed and is not null
+            # Check national ID uniqueness only if it changed, and only
+            # among active (non soft-deleted) patients
             if national_id is not None and national_id != row.national_id:
                 cursor.execute(
-                    "SELECT patient_id FROM [Patient] WHERE national_id = ? AND patient_id <> ?",
+                    """
+                    SELECT patient_id
+                    FROM [Patient]
+                    WHERE national_id = ?
+                    AND patient_id <> ?
+                    AND is_deleted = 0
+                    """,
                     (national_id, patient_id),
                 )
                 if cursor.fetchone():
@@ -126,14 +117,13 @@ class PatientService:
                 """
                 UPDATE [Patient]
                 SET
-                    mrn = ?, first_name = ?, last_name = ?, date_of_birth = ?, gender = ?,
+                    first_name = ?, last_name = ?, date_of_birth = ?, gender = ?,
                     national_id = ?, phone = ?, address = ?,
                     emergency_contact_name = ?, emergency_contact_phone = ?,
                     updated_at = GETDATE()
                 WHERE patient_id = ?
                 """,
                 (
-                    mrn,
                     first_name,
                     last_name,
                     date_of_birth,

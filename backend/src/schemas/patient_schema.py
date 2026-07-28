@@ -1,33 +1,51 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+Gender = Literal["Male", "Female", "Other"]
 
 
 class PatientCreateSchema(BaseModel):
-    mrn: str = Field(..., min_length=2, max_length=50)  # Medical Record Number
+    # mrn is NOT accepted here — system-generated (format: MRN-00001)
+    # by the TR_CreateMRN trigger right after insertion.
     first_name: str = Field(..., min_length=2, max_length=100)
     last_name: str = Field(..., min_length=2, max_length=100)
     date_of_birth: date
-    gender: str = Field(..., min_length=1, max_length=10)
+    gender: Gender
     national_id: Optional[str] = Field(default=None, max_length=50)
     phone: Optional[str] = Field(default=None, max_length=20)
     address: Optional[str] = Field(default=None, max_length=255)
     emergency_contact_name: Optional[str] = Field(default=None, max_length=150)
     emergency_contact_phone: Optional[str] = Field(default=None, max_length=20)
+
+    @field_validator("date_of_birth")
+    @classmethod
+    def reject_future_dob(cls, value: date) -> date:
+        if value > date.today():
+            raise ValueError("date_of_birth cannot be in the future.")
+        return value
 
 
 class PatientUpdateSchema(BaseModel):
-    mrn: Optional[str] = Field(default=None, min_length=2, max_length=50)
+    # mrn intentionally excluded — system-generated identifier,
+    # immutable after creation.
     first_name: Optional[str] = Field(default=None, min_length=2, max_length=100)
     last_name: Optional[str] = Field(default=None, min_length=2, max_length=100)
     date_of_birth: Optional[date] = None
-    gender: Optional[str] = Field(default=None, min_length=1, max_length=10)
+    gender: Optional[Gender] = None
     national_id: Optional[str] = Field(default=None, max_length=50)
     phone: Optional[str] = Field(default=None, max_length=20)
     address: Optional[str] = Field(default=None, max_length=255)
     emergency_contact_name: Optional[str] = Field(default=None, max_length=150)
     emergency_contact_phone: Optional[str] = Field(default=None, max_length=20)
+
+    @field_validator("date_of_birth")
+    @classmethod
+    def reject_future_dob(cls, value: Optional[date]) -> Optional[date]:
+        if value is not None and value > date.today():
+            raise ValueError("date_of_birth cannot be in the future.")
+        return value
 
 
 class PatientResponseSchema(BaseModel):

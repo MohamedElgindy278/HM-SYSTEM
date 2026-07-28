@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../services/api';
-import './Login.css';
 
 import AuthLayout from '../components/AuthLayout';
 import LoginForm from '../components/LoginForm';
@@ -71,8 +70,7 @@ export default function Login() {
 
       navigate('/dashboard', { replace: true });
     } catch (error) {
-      const message =
-        error.message || 'Something went wrong. Please try again.';
+      const message = error.message || 'Something went wrong. Please try again.';
 
       setErrorMessage(message);
 
@@ -94,8 +92,7 @@ export default function Login() {
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
       setAuthView(AUTH_VIEW.FORGOT_OTP);
     } catch (error) {
-      const message =
-        error.message || 'Something went wrong. Please try again.';
+      const message = error.message || 'Something went wrong. Please try again.';
 
       setErrorMessage(message);
     } finally {
@@ -112,8 +109,7 @@ export default function Login() {
       await api.post('/auth/forgot-password', { email });
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (error) {
-      const message =
-        error.message || 'Something went wrong. Please try again.';
+      const message = error.message || 'Something went wrong. Please try again.';
 
       setErrorMessage(message);
     }
