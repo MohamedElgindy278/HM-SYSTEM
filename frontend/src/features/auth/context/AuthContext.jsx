@@ -1,14 +1,14 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import api from '../../../services/api';
 
-const AuthContext = createContext(null);
+import { AuthContext } from './AuthContext';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadCurrentUser = async () => {
+  const loadCurrentUser = useCallback(async () => {
     const token = localStorage.getItem('access_token');
 
     if (!token) {
@@ -25,28 +25,45 @@ export function AuthProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadCurrentUser();
   }, []);
 
-  const login = async (username, password, rememberMe) => {
-    const response = await api.post('/auth/login', {
-      username,
-      password,
-      remember_me: rememberMe,
-    });
-    console.log(response);
-    const { access_token, refresh_token } = response.data;
+  useEffect(() => {
+    let isMounted = true;
 
-    localStorage.setItem('access_token', access_token);
-    localStorage.setItem('refresh_token', refresh_token);
+    const initializeAuth = async () => {
+      await loadCurrentUser();
 
-    await loadCurrentUser();
-  };
+      if (!isMounted) {
+        return;
+      }
+    };
 
-  const logout = async () => {
+    void initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [loadCurrentUser]);
+
+  const login = useCallback(
+    async (username, password, rememberMe) => {
+      const response = await api.post('/auth/login', {
+        username,
+        password,
+        remember_me: rememberMe,
+      });
+
+      const { access_token, refresh_token } = response.data;
+
+      localStorage.setItem('access_token', access_token);
+      localStorage.setItem('refresh_token', refresh_token);
+
+      await loadCurrentUser();
+    },
+    [loadCurrentUser]
+  );
+
+  const logout = useCallback(async () => {
     const refreshToken = localStorage.getItem('refresh_token');
 
     try {
@@ -58,37 +75,29 @@ export function AuthProvider({ children }) {
       localStorage.removeItem('refresh_token');
       setUser(null);
     }
-  };
+  }, []);
 
-  const forgotPassword = async (email) => {
-    return await api.post('/auth/forgot-password', {
-      email,
-    });
-  };
+  const forgotPassword = useCallback(async (email) => {
+    return api.post('/auth/forgot-password', { email });
+  }, []);
 
-  const hasPermission = (permissionName) => {
-    return user?.permissions?.includes(permissionName) ?? false;
-  };
+  const hasPermission = useCallback(
+    (permissionName) => user?.permissions?.includes(permissionName) ?? false,
+    [user]
+  );
 
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    isLoading,
-    login,
-    logout,
-    forgotPassword,
-    hasPermission,
-  };
+  const value = useMemo(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      login,
+      logout,
+      forgotPassword,
+      hasPermission,
+    }),
+    [user, isLoading, login, logout, forgotPassword, hasPermission]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-
-  return context;
 }

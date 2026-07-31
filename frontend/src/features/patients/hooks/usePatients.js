@@ -3,11 +3,11 @@ import { useApiMutation } from '../../../hooks/useApiMutation';
 import { patientApi } from '../api/patientApi';
 
 export function usePatientsList(startNum = 1, pageSize = 20) {
-  return useApiQuery(() => patientApi.getAll(startNum, pageSize), [startNum, pageSize]);
+  return useApiQuery(() => patientApi.getAll(startNum, pageSize));
 }
 
 export function usePatient(patientId) {
-  return useApiQuery(() => patientApi.getById(patientId), [patientId], {
+  return useApiQuery(() => patientApi.getById(patientId), {
     enabled: !!patientId,
   });
 }

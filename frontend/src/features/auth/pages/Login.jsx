@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../../../services/api';
 
 import AuthLayout from '../components/AuthLayout';
@@ -7,7 +7,7 @@ import ForgotPasswordForm from '../components/ForgotPasswordForm';
 import ForgotOTPForm from '../components/ForgotOTPForm';
 import ResetPasswordForm from '../components/ResetPasswordForm';
 
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 const AUTH_VIEW = {

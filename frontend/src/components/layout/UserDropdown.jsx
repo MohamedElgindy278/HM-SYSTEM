@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, User, Settings, KeyRound, LogOut } from 'lucide-react';
 
-import { useAuth } from '../../features/auth/context/AuthContext';
+import { useAuth } from '../../features/auth/context/useAuth';
 
 import './UserDropdown.css';
 
