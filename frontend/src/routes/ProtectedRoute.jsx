@@ -1,12 +1,12 @@
 import { Navigate } from 'react-router-dom';
 
-import { useAuth } from '../features/auth/context/AuthContext';
+import { useAuth } from '../features/auth/context/useAuth';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return null;
+    return <div className="page-loading">Loading your workspace…</div>;
   }
 
   if (!isAuthenticated) {

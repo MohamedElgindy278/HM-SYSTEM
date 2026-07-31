@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, X, LogOut } from 'lucide-react';
 import { useState } from 'react';
 
-import { useAuth } from '../../features/auth/context/AuthContext';
+import { useAuth } from '../../features/auth/context/useAuth';
 import { getVisibleSidebarItems } from './sidebarData';
 
 import './Sidebar.css';
