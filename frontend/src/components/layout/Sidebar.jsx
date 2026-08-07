@@ -13,6 +13,7 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const permissions = user?.permissions || [];
 
   const visibleSections = getVisibleSidebarItems(permissions);
+
   return (
     <>
       <div

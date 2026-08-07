@@ -1,6 +1,8 @@
 import { BedDouble, DoorOpen, Building2, Stethoscope, Siren, Activity } from 'lucide-react';
+
+import { Card, Loading } from '../../../components/ui';
 import { useHospitalStatus } from '../hooks/useDashboard';
-import Loading from '../../../components/common/Loading';
+import { extractErrorMessage } from '../../../utils/errors';
 
 const AVAILABILITY_TONE = {
   Normal: 'tone-success',
@@ -10,7 +12,7 @@ const AVAILABILITY_TONE = {
 
 function StatusTile({ tone, Icon, value, label }) {
   return (
-    <div className={`status-tile ${tone}`}>
+    <Card className={`status-tile ${tone}`} hoverable={false}>
       <div className="status-icon">
         <Icon size={20} />
       </div>
@@ -18,61 +20,63 @@ function StatusTile({ tone, Icon, value, label }) {
         <div className="status-value">{value}</div>
         <div className="status-label">{label}</div>
       </div>
-    </div>
+    </Card>
   );
 }
 
 export default function HospitalStatus() {
-  const { data: status, loading, error } = useHospitalStatus();
+  const { data: status, isLoading, isError, error } = useHospitalStatus();
 
   return (
     <>
       <h2 className="section-title">Hospital Status</h2>
 
-      {loading && <Loading label="Loading hospital status..." />}
-      {error && <div className="empty-state error">{error}</div>}
+      {isLoading && <Loading label="Loading hospital status..." />}
+      {isError && <div className="empty-state error">{extractErrorMessage(error)}</div>}
 
-      {!loading && !error && status && (
+      {!isLoading && !isError && status && (
         <section className="grid grid-status">
           <StatusTile
             tone="tone-primary"
             Icon={BedDouble}
-            value={`${status.bed_occupancy.occupancy_rate}%`}
+            value={`${status.bed_occupancy?.occupancy_rate ?? 0}%`}
             label="Bed Occupancy"
           />
 
           <StatusTile
             tone="tone-primary"
             Icon={DoorOpen}
-            value={`${status.room_occupancy.occupied} / ${status.room_occupancy.total}`}
+            value={`${status.room_occupancy?.occupied ?? 0} / ${status.room_occupancy?.total ?? 0}`}
             label="Room Occupancy"
           />
 
           <StatusTile
             tone="tone-primary"
             Icon={Building2}
-            value={status.ward_status.total_wards}
+            value={status.ward_status?.total_wards ?? 0}
             label="Wards"
           />
 
           <StatusTile
             tone="tone-primary"
             Icon={Stethoscope}
-            value={status.clinic_status.open_clinics}
+            value={status.clinic_status?.open_clinics ?? 0}
             label="Open Clinics"
           />
 
           <StatusTile
-            tone={status.emergency_queue.waiting_patients > 0 ? 'tone-danger' : 'tone-success'}
+            tone={
+              (status.emergency_queue?.waiting_patients ?? 0) > 0 ? 'tone-danger' : 'tone-success'
+            }
             Icon={Siren}
-            value={status.emergency_queue.waiting_patients}
+            value={status.emergency_queue?.waiting_patients ?? 0}
             label="Emergency Queue"
           />
 
           <StatusTile
-            tone={AVAILABILITY_TONE[status.hospital_availability.status] || 'tone-primary'}
+            tone={AVAILABILITY_TONE[status.hospital_availability?.status] || 'tone-primary'}
             Icon={Activity}
-            value={status.hospital_availability.status}
+            value={status.hospital_availability?.status ?? '—'}
             label="Hospital Availability"
           />
         </section>

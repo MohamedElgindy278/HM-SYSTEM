@@ -9,8 +9,9 @@ import {
   TrendingDown,
 } from 'lucide-react';
 
+import { Card, Loading } from '../../../components/ui';
 import { useDashboardStats } from '../hooks/useDashboard';
-import Loading from '../../../components/common/Loading';
+import { extractErrorMessage } from '../../../utils/errors';
 
 const CARD_META = [
   { key: 'total_patients', title: 'Total Patients', Icon: Users, gradient: 'g-primary' },
@@ -34,12 +35,12 @@ function formatValue(key, value) {
 }
 
 function StatCard({ title, Icon, gradient, item, valueKey }) {
-  const hasTrend = item.trend !== null && item.trend !== undefined;
+  const hasTrend = item?.trend !== null && item?.trend !== undefined;
   const positive = hasTrend && item.trend >= 0;
   const TrendIcon = positive ? TrendingUp : TrendingDown;
 
   return (
-    <div className="card hoverable stat-card">
+    <Card hoverable className="stat-card">
       <div className="stat-card-top">
         <div className={`stat-icon ${gradient}`}>
           <Icon size={22} />
@@ -54,24 +55,30 @@ function StatCard({ title, Icon, gradient, item, valueKey }) {
       </div>
 
       <div className="stat-card-body">
-        <span className="stat-value">{formatValue(valueKey, item.value)}</span>
+        <span className="stat-value">{formatValue(valueKey, item?.value)}</span>
         <span className="stat-label">{title}</span>
       </div>
-    </div>
+    </Card>
   );
 }
 
 export default function StatisticsCards() {
-  const { data: stats, loading, error } = useDashboardStats();
+  const { data: stats, isLoading, isError, error } = useDashboardStats();
 
   return (
     <>
       <h2 className="section-title">Overview</h2>
 
-      {loading && <Loading label="Loading statistics..." />}
-      {error && <div className="empty-state error">{error}</div>}
+      {isLoading && (
+        <section className="statistics-cards">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="skeleton skeleton-stat" />
+          ))}
+        </section>
+      )}
+      {isError && <div className="empty-state error">{extractErrorMessage(error)}</div>}
 
-      {!loading && !error && stats && (
+      {!isLoading && !isError && stats && (
         <section className="statistics-cards">
           {CARD_META.map(({ key, title, Icon, gradient }) => (
             <StatCard

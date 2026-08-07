@@ -1,15 +1,18 @@
 import { Menu, Search } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
-import './Navbar.css';
+import { Input } from '../ui';
 import UserDropdown from './UserDropdown.jsx';
 import NotificationDropdown from './NotificationDropdown.jsx';
-import { useLocation } from 'react-router-dom';
 import { getPageTitle } from './sidebarData';
+
+import './Navbar.css';
 
 export default function Navbar({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
 
   const currentPage = getPageTitle(location.pathname);
+
   return (
     <header className="navbar">
       {/* ================= Left ================= */}
@@ -19,6 +22,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
           className="menu-btn"
           onClick={() => setSidebarOpen(!sidebarOpen)}
           aria-label="Toggle menu"
+          aria-expanded={sidebarOpen}
         >
           <Menu size={22} />
         </button>
@@ -33,10 +37,13 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
       {/* ================= Center ================= */}
 
       <div className="navbar-center">
-        <div className="search-box">
-          <Search size={18} className="search-icon" />
-          <input type="text" placeholder="Search patients, doctors, appointments..." />
-        </div>
+        <Input
+          icon={Search}
+          type="text"
+          placeholder="Search patients, doctors, appointments..."
+          className="navbar-search-input"
+          aria-label="Search"
+        />
       </div>
 
       {/* ================= Right ================= */}

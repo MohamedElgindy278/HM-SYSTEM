@@ -1,6 +1,8 @@
 import { UserPlus, Trash2, Pencil, Activity } from 'lucide-react';
+
+import { Card, Loading } from '../../../components/ui';
 import { useRecentActivity } from '../hooks/useDashboard';
-import Loading from '../../../components/common/Loading';
+import { extractErrorMessage } from '../../../utils/errors';
 
 const ACTION_LABEL = {
   INSERT: 'created',
@@ -28,18 +30,18 @@ function formatDate(dateString) {
 }
 
 export default function RecentActivity() {
-  const { data, loading, error } = useRecentActivity(5);
+  const { data, isLoading, isError, error } = useRecentActivity(5);
   const activities = data || [];
 
   return (
     <>
       <h2 className="section-title">Recent Activity</h2>
 
-      <div className="card">
-        {loading && <Loading label="Loading activity..." />}
-        {error && <div className="empty-state error">{error}</div>}
+      <Card>
+        {isLoading && <Loading label="Loading activity..." />}
+        {isError && <div className="empty-state error">{extractErrorMessage(error)}</div>}
 
-        {!loading && !error && (
+        {!isLoading && !isError && (
           <div className="timeline">
             {activities.length === 0 ? (
               <div className="empty-state">No recent activity.</div>
@@ -47,7 +49,6 @@ export default function RecentActivity() {
               activities.map((item) => {
                 const Icon = ACTION_ICON[item.action] || Activity;
                 const color = ACTION_COLOR[item.action] || '#64748b';
-                const verb = ACTION_LABEL[item.action] || item.action.toLowerCase();
 
                 return (
                   <div className="t-item" key={item.audit_id}>
@@ -57,7 +58,8 @@ export default function RecentActivity() {
 
                     <div className="t-body">
                       <div className="t-text">
-                        <strong>{item.changed_by_name ?? 'System'}</strong> {verb}{' '}
+                        <strong>{item.changed_by_name ?? 'System'}</strong>{' '}
+                        {ACTION_LABEL[item.action] || item.action?.toLowerCase()}{' '}
                         <strong>{item.table_name}</strong> #{item.record_id}
                       </div>
                       <div className="t-time">{formatDate(item.changed_at)}</div>
@@ -68,7 +70,7 @@ export default function RecentActivity() {
             )}
           </div>
         )}
-      </div>
+      </Card>
     </>
   );
 }

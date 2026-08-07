@@ -1,4 +1,4 @@
-import './Pagination.css'
+import './Pagination.css';
 
 export default function Pagination({ page, pageSize, total, onPageChange }) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));

@@ -1,19 +1,16 @@
 import { useState } from 'react';
-import { Eye, EyeClosed } from 'lucide-react';
+import { Eye, EyeClosed, ArrowLeft } from 'lucide-react';
+
+import { Button, Input, Card } from '../../../components/ui';
 
 export default function ResetPasswordForm({
   newPassword,
   setNewPassword,
-
   confirmPassword,
   setConfirmPassword,
-
   isSubmitting,
-
   errorMessage,
-
   handleResetPassword,
-
   setAuthView,
 }) {
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -21,7 +18,7 @@ export default function ResetPasswordForm({
 
   return (
     <div className="form-panel">
-      <div className="login-card">
+      <Card className="login-card" hoverable={false}>
         <div className="card-logo">🔒</div>
 
         <h1 className="card-title">Reset Password</h1>
@@ -35,7 +32,7 @@ export default function ResetPasswordForm({
             </div>
           )}
 
-          <div className="form-field">
+          <div className="form-group">
             <label className="form-label" htmlFor="newPassword">
               New Password
             </label>
@@ -48,6 +45,7 @@ export default function ResetPasswordForm({
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
+                minLength={8}
               />
               <button
                 type="button"
@@ -58,9 +56,10 @@ export default function ResetPasswordForm({
                 {showNewPassword ? <Eye size={18} /> : <EyeClosed size={18} />}
               </button>
             </div>
+            <span className="form-hint">Must be at least 8 characters</span>
           </div>
 
-          <div className="form-field">
+          <div className="form-group">
             <label className="form-label" htmlFor="confirmPassword">
               Confirm Password
             </label>
@@ -85,15 +84,27 @@ export default function ResetPasswordForm({
             </div>
           </div>
 
-          <button className="submit-button" disabled={isSubmitting}>
-            <span>{isSubmitting ? 'Changing...' : 'Change Password'}</span>
-          </button>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={isSubmitting}
+            disabled={isSubmitting}
+            className="submit-button"
+            size="lg"
+          >
+            {isSubmitting ? 'Changing...' : 'Change Password'}
+          </Button>
 
-          <button type="button" className="forgot-link" onClick={() => setAuthView('login')}>
-            ← Back to Login
+          <button
+            type="button"
+            className="forgot-link back-link"
+            onClick={() => setAuthView('login')}
+          >
+            <ArrowLeft size={16} />
+            Back to Login
           </button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }

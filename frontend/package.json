@@ -12,11 +12,9 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",
     "@tanstack/react-query": "^5.101.0",
-    "apexcharts": "^6.5.0",
     "axios": "^1.18.1",
     "lucide-react": "^1.21.0",
     "react": "^19.2.6",
-    "react-apexcharts": "^2.1.1",
     "react-dom": "^19.2.6",
     "react-redux": "^9.3.0",
     "react-router-dom": "^7.18.0",

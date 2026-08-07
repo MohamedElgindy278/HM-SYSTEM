@@ -811,3 +811,75 @@
     font-size: var(--font-size-xs);
   }
 }
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.back-link svg {
+  transition: transform var(--dur-fast) ease;
+}
+
+.back-link:hover svg {
+  transform: translateX(-2px);
+}
+
+/* ===== OTP actions ===== */
+.otp-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: 4px;
+}
+
+/* ===== Submit button full width ===== */
+.submit-button {
+  width: 100% !important;
+  justify-content: center !important;
+  padding: 14.5px !important;
+  font-size: var(--font-size-md) !important;
+  border-radius: var(--radius-sm) !important;
+  margin-top: 4px;
+}
+
+/* ===== Spinner inside button ===== */
+.btn-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===== Input focus state ===== */
+.form-input.focused {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+/* ===== Card logo animations ===== */
+.card-logo {
+  transition: transform var(--dur-base) ease;
+}
+
+.card-logo:hover {
+  transform: scale(1.05) rotate(-2deg);
+}
+
+/* ===== Responsive overrides ===== */
+@media (max-width: 767px) {
+  .submit-button {
+    padding: var(--space-sm) !important;
+    font-size: clamp(13.5px, 2.5vw, 15px) !important;
+  }
+
+  .otp-actions {
+    gap: var(--space-xs);
+  }
+}

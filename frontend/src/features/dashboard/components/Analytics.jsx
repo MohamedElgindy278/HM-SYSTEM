@@ -1,5 +1,23 @@
-import Chart from 'react-apexcharts';
+import { useState } from 'react';
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
+import { Card } from '../../../components/ui';
 import {
   usePatientGrowth,
   useRevenueAnalytics,
@@ -8,7 +26,8 @@ import {
   useBedOccupancy,
   useAdmissionsAnalytics,
 } from '../hooks/useDashboard';
-import Loading from '../../../components/common/Loading';
+import { extractErrorMessage } from '../../../utils/errors';
+import PeriodSelector from './PeriodSelector';
 
 const COLORS = ['#2563eb', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -16,190 +35,268 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 function formatAxisLabel(label) {
   if (!label) return label;
   const parts = String(label).split('-');
-
   if (parts.length === 2) return MONTHS[Number(parts[1]) - 1] || label;
   if (parts.length === 3) return `${Number(parts[2])}/${Number(parts[1])}`;
-
   return label;
 }
 
-function ChartCard({ title, loading, error, isEmpty, children }) {
+function ChartSkeleton() {
+  return <div className="skeleton skeleton-chart" />;
+}
+
+function ChartCard({
+  title,
+  period,
+  onPeriodChange,
+  isLoading,
+  isError,
+  error,
+  isEmpty,
+  children,
+}) {
   return (
-    <div className="card chart-card">
+    <Card className="chart-card" hoverable={false}>
       <div className="chart-card-head">
         <span className="chart-card-title">{title}</span>
+        {onPeriodChange && <PeriodSelector value={period} onChange={onPeriodChange} />}
       </div>
 
-      {loading && <Loading size="sm" />}
-      {error && <div className="empty-state error">{error}</div>}
-      {!loading && !error && isEmpty && <div className="empty-state">No data yet.</div>}
-      {!loading && !error && !isEmpty && children}
-    </div>
+      {isLoading && <ChartSkeleton />}
+      {isError && <div className="empty-state error">{extractErrorMessage(error)}</div>}
+      {!isLoading && !isError && isEmpty && <div className="empty-state">No data yet.</div>}
+      {!isLoading && !isError && !isEmpty && children}
+    </Card>
   );
 }
-
-// ---------------------------------------------------------------------
 
 function PatientGrowthChart() {
-  const { data, loading, error } = usePatientGrowth('month');
-  const points = data || [];
-
-  const options = {
-    chart: { toolbar: { show: false }, zoom: { enabled: false } },
-    stroke: { curve: 'smooth', width: 3 },
-    fill: { type: 'gradient', gradient: { opacityFrom: 0.5, opacityTo: 0.05 } },
-    colors: ['#2563eb'],
-    dataLabels: { enabled: false },
-    xaxis: {
-      categories: points.map((x) => x.label),
-      labels: { formatter: formatAxisLabel },
-    },
-    grid: { borderColor: '#e2e8f0' },
-  };
-
-  const series = [{ name: 'Patients', data: points.map((x) => x.value) }];
+  const [period, setPeriod] = useState('month');
+  const { data, isLoading, isError, error } = usePatientGrowth(period);
+  const points = (data || []).map((x) => ({
+    label: formatAxisLabel(x.label),
+    value: Number(x.value) || 0,
+  }));
 
   return (
-    <ChartCard title="Patient Growth" loading={loading} error={error} isEmpty={!points.length}>
-      <Chart options={options} series={series} type="area" height={280} />
+    <ChartCard
+      title="Patient Growth"
+      period={period}
+      onPeriodChange={setPeriod}
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      isEmpty={!points.length}
+    >
+      <ResponsiveContainer width="100%" height={280}>
+        <AreaChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <defs>
+            <linearGradient id="patientGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#2563eb" stopOpacity={0.35} />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <Tooltip />
+          <Area
+            type="monotone"
+            dataKey="value"
+            name="Patients"
+            stroke="#2563eb"
+            strokeWidth={2.5}
+            fill="url(#patientGrad)"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
     </ChartCard>
   );
 }
-
-// ---------------------------------------------------------------------
 
 function RevenueChart() {
-  const { data, loading, error } = useRevenueAnalytics('year');
-  const points = data || [];
-
-  const options = {
-    chart: { toolbar: { show: false } },
-    stroke: { curve: 'smooth', width: 3 },
-    colors: ['#10b981'],
-    dataLabels: { enabled: false },
-    xaxis: {
-      categories: points.map((x) => x.label),
-      labels: { formatter: formatAxisLabel },
-    },
-    grid: { borderColor: '#e2e8f0' },
-  };
-
-  const series = [{ name: 'Revenue', data: points.map((x) => x.value) }];
+  const [period, setPeriod] = useState('year');
+  const { data, isLoading, isError, error } = useRevenueAnalytics(period);
+  const points = (data || []).map((x) => ({
+    label: formatAxisLabel(x.label),
+    value: Number(x.value) || 0,
+  }));
 
   return (
-    <ChartCard title="Revenue" loading={loading} error={error} isEmpty={!points.length}>
-      <Chart options={options} series={series} type="line" height={280} />
+    <ChartCard
+      title="Revenue"
+      period={period}
+      onPeriodChange={setPeriod}
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      isEmpty={!points.length}
+    >
+      <ResponsiveContainer width="100%" height={280}>
+        <LineChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <Tooltip />
+          <Line
+            type="monotone"
+            dataKey="value"
+            name="Revenue"
+            stroke="#10b981"
+            strokeWidth={2.5}
+            dot={{ r: 3 }}
+            activeDot={{ r: 5 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </ChartCard>
   );
 }
-
-// ---------------------------------------------------------------------
 
 function DepartmentsChart() {
-  const { data, loading, error } = useDepartmentDistribution();
-  const departments = data || [];
-
-  const options = {
-    labels: departments.map((x) => x.department_name),
-    legend: { position: 'bottom' },
-    colors: COLORS,
-    dataLabels: { enabled: true },
-  };
-
-  const series = departments.map((x) => x.patient_count);
+  const { data, isLoading, isError, error } = useDepartmentDistribution();
+  const departments = (data || []).map((x) => ({
+    name: x.department_name,
+    value: Number(x.patient_count) || 0,
+  }));
 
   return (
-    <ChartCard title="Departments" loading={loading} error={error} isEmpty={!departments.length}>
-      <Chart options={options} series={series} type="donut" height={300} />
+    <ChartCard
+      title="Departments"
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      isEmpty={!departments.length}
+    >
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={departments}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            innerRadius={70}
+            outerRadius={110}
+            paddingAngle={2}
+          >
+            {departments.map((_, index) => (
+              <Cell key={index} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip />
+          <Legend verticalAlign="bottom" height={36} />
+        </PieChart>
+      </ResponsiveContainer>
     </ChartCard>
   );
 }
-
-// ---------------------------------------------------------------------
 
 function AppointmentsChart() {
-  const { data, loading, error } = useAppointmentsAnalytics('month');
+  const [period, setPeriod] = useState('month');
+  const { data, isLoading, isError, error } = useAppointmentsAnalytics(period);
 
-  const options = {
-    chart: { toolbar: { show: false } },
-    colors: ['#2563eb'],
-    plotOptions: { bar: { borderRadius: 6, columnWidth: '45%' } },
-    dataLabels: { enabled: false },
-    xaxis: { categories: ['Scheduled', 'Completed', 'Cancelled'] },
-  };
-
-  const series = [
-    {
-      name: 'Appointments',
-      data: [data?.scheduled || 0, data?.completed || 0, data?.cancelled || 0],
-    },
+  const chartData = [
+    { name: 'Scheduled', value: data?.scheduled ?? 0 },
+    { name: 'Completed', value: data?.completed ?? 0 },
+    { name: 'Cancelled', value: data?.cancelled ?? 0 },
   ];
 
+  const isEmpty = !data || (data.scheduled === 0 && data.completed === 0 && data.cancelled === 0);
+
   return (
-    <ChartCard title="Appointments" loading={loading} error={error} isEmpty={!data}>
-      <Chart options={options} series={series} type="bar" height={280} />
+    <ChartCard
+      title="Appointments"
+      period={period}
+      onPeriodChange={setPeriod}
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      isEmpty={isEmpty}
+    >
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <Tooltip />
+          <Bar dataKey="value" name="Appointments" fill="#2563eb" radius={[6, 6, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
     </ChartCard>
   );
 }
-
-// ---------------------------------------------------------------------
 
 function BedOccupancyChart() {
-  const { data, loading, error } = useBedOccupancy('month');
-  const points = data || [];
-
-  const options = {
-    chart: { toolbar: { show: false } },
-    stroke: { curve: 'smooth', width: 3 },
-    colors: ['#ef4444'],
-    dataLabels: { enabled: false },
-    xaxis: {
-      categories: points.map((x) => x.label),
-      labels: { formatter: formatAxisLabel },
-    },
-    yaxis: { max: 100 },
-    grid: { borderColor: '#e2e8f0' },
-  };
-
-  const series = [{ name: 'Occupancy %', data: points.map((x) => x.occupancy_rate) }];
+  const [period, setPeriod] = useState('month');
+  const { data, isLoading, isError, error } = useBedOccupancy(period);
+  const points = (data || []).map((x) => ({
+    label: formatAxisLabel(x.label),
+    value: Number(x.value ?? x.occupancy_rate) || 0,
+  }));
 
   return (
-    <ChartCard title="Bed Occupancy" loading={loading} error={error} isEmpty={!points.length}>
-      <Chart options={options} series={series} type="line" height={280} />
+    <ChartCard
+      title="Bed Occupancy"
+      period={period}
+      onPeriodChange={setPeriod}
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      isEmpty={!points.length}
+    >
+      <ResponsiveContainer width="100%" height={280}>
+        <LineChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} stroke="#94a3b8" unit="%" />
+          <Tooltip />
+          <Line
+            type="monotone"
+            dataKey="value"
+            name="Occupancy %"
+            stroke="#ef4444"
+            strokeWidth={2.5}
+            dot={{ r: 3 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </ChartCard>
   );
 }
-
-// ---------------------------------------------------------------------
 
 function AdmissionsChart() {
-  const { data, loading, error } = useAdmissionsAnalytics('month');
-  const points = data || [];
-
-  const options = {
-    chart: { toolbar: { show: false } },
-    plotOptions: { bar: { borderRadius: 6, columnWidth: '50%' } },
-    colors: ['#2563eb', '#10b981'],
-    dataLabels: { enabled: false },
-    xaxis: {
-      categories: points.map((x) => x.label),
-      labels: { formatter: formatAxisLabel },
-    },
-  };
-
-  const series = [
-    { name: 'Admissions', data: points.map((x) => x.admissions) },
-    { name: 'Discharges', data: points.map((x) => x.discharges) },
-  ];
+  const [period, setPeriod] = useState('month');
+  const { data, isLoading, isError, error } = useAdmissionsAnalytics(period);
+  const points = (data || []).map((x) => ({
+    label: formatAxisLabel(x.label),
+    admissions: Number(x.admissions) || 0,
+    discharges: Number(x.discharges) || 0,
+  }));
 
   return (
-    <ChartCard title="Admissions" loading={loading} error={error} isEmpty={!points.length}>
-      <Chart options={options} series={series} type="bar" height={280} />
+    <ChartCard
+      title="Admissions"
+      period={period}
+      onPeriodChange={setPeriod}
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      isEmpty={!points.length}
+    >
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="label" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="admissions" name="Admissions" fill="#2563eb" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="discharges" name="Discharges" fill="#10b981" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
     </ChartCard>
   );
 }
-
-// ---------------------------------------------------------------------
 
 export default function Analytics() {
   return (

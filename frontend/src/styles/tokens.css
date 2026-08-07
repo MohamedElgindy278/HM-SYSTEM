@@ -1,24 +1,68 @@
 :root {
-  /* ---------- Brand / status colors ---------- */
+  /* ============================================
+     🎨 BRAND & STATUS COLORS
+     ============================================ */
   --color-primary: #2563eb;
   --color-primary-hover: #1d4ed8;
+  --color-primary-active: #1e40af;
+  --color-primary-light: #dbeafe;
+
   --color-secondary: #06b6d4;
+  --color-secondary-hover: #0891b2;
+  --color-secondary-light: #cffafe;
+
   --color-success: #10b981;
+  --color-success-hover: #059669;
+  --color-success-light: #d1fae5;
+
   --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-danger-light: #fee2e2;
+
   --color-warning: #f59e0b;
+  --color-warning-hover: #d97706;
+  --color-warning-light: #fef3c7;
+
   --color-info: #0ea5e9;
+  --color-info-hover: #0284c7;
+  --color-info-light: #e0f2fe;
 
-  /* ---------- Surfaces ---------- */
+  /* ---------- Accent Colors (Extra) ---------- */
+  --color-purple: #7c3aed;
+  --color-purple-hover: #6d28d9;
+  --color-purple-light: #ede9fe;
+
+  --color-pink: #ec4899;
+  --color-pink-hover: #db2777;
+  --color-pink-light: #fce7f3;
+
+  --color-indigo: #4f46e5;
+  --color-indigo-hover: #4338ca;
+  --color-indigo-light: #e0e7ff;
+
+  /* ============================================
+     📐 SURFACES & BACKGROUNDS
+     ============================================ */
   --color-bg: #f8fafc;
+  --color-bg-secondary: #f1f5f9;
   --color-surface: #ffffff;
+  --color-surface-hover: #fafcff;
   --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --color-border-dark: #cbd5e1;
 
-  /* ---------- Text ---------- */
+  /* ============================================
+     ✍️ TEXT COLORS
+     ============================================ */
   --color-title: #0f172a;
   --color-text: #475569;
+  --color-text-light: #64748b;
   --color-muted: #94a3b8;
+  --color-white: #ffffff;
 
-  /* ---------- Status tints (light backgrounds for badges/tiles) ---------- */
+  /* ============================================
+     🏷️ STATUS TINTS (للـ Badges والتايلات)
+     ============================================ */
   --color-success-bg: #ecfdf5;
   --color-success-text: #047857;
   --color-danger-bg: #fef2f2;
@@ -27,34 +71,151 @@
   --color-warning-text: #b45309;
   --color-info-bg: #eff6ff;
   --color-info-text: #1d4ed8;
+  --color-purple-bg: #f5f3ff;
+  --color-purple-text: #5b21b6;
+  --color-pink-bg: #fdf2f8;
+  --color-pink-text: #be185d;
 
-  /* ---------- Radius ---------- */
+  /* ============================================
+     🌈 GRADIENTS
+     ============================================ */
+  --gradient-primary: linear-gradient(135deg, #2563eb, #7c3aed);
+  --gradient-primary-hover: linear-gradient(135deg, #1d4ed8, #6d28d9);
+  --gradient-secondary: linear-gradient(135deg, #06b6d4, #3b82f6);
+  --gradient-success: linear-gradient(135deg, #10b981, #34d399);
+  --gradient-danger: linear-gradient(135deg, #ef4444, #f87171);
+  --gradient-warning: linear-gradient(135deg, #f59e0b, #fbbf24);
+  --gradient-info: linear-gradient(135deg, #0ea5e9, #60a5fa);
+  --gradient-purple: linear-gradient(135deg, #7c3aed, #a78bfa);
+  --gradient-dark: linear-gradient(160deg, #0f172a, #1e1b4b, #312e81);
+  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
+
+  /* ============================================
+     🎯 SHADOWS
+     ============================================ */
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.1), 0 4px 8px rgba(15, 23, 42, 0.04);
+  --shadow-xl: 0 20px 50px rgba(15, 23, 42, 0.12), 0 8px 16px rgba(15, 23, 42, 0.04);
+  --shadow-2xl: 0 30px 70px rgba(15, 23, 42, 0.15);
+
+  /* Colored Shadows */
+  --shadow-primary: 0 4px 20px rgba(37, 99, 235, 0.3);
+  --shadow-primary-hover: 0 8px 30px rgba(37, 99, 235, 0.4);
+  --shadow-success: 0 4px 20px rgba(16, 185, 129, 0.3);
+  --shadow-danger: 0 4px 20px rgba(239, 68, 68, 0.25);
+  --shadow-warning: 0 4px 20px rgba(245, 158, 11, 0.25);
+  --shadow-purple: 0 4px 20px rgba(124, 58, 237, 0.3);
+
+  /* Hover Shadow (اللي حطيتها) */
+  --shadow-hover: 0 14px 28px -8px rgba(37, 99, 235, 0.14), 0 4px 10px rgba(15, 23, 42, 0.06);
+
+  /* ============================================
+     🔲 BORDER RADIUS
+     ============================================ */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-2xl: 36px;
   --radius-pill: 999px;
+  --radius-full: 50%;
 
-  /* ---------- Shadow ---------- */
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
-  --shadow-hover: 0 14px 28px -8px rgba(37, 99, 235, 0.14), 0 4px 10px rgba(15, 23, 42, 0.06);
+  /* ============================================
+     📏 SPACING
+     ============================================ */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 80px;
 
-  /* ---------- Typography ---------- */
-  --font-family: 'Inter', sans-serif;
+  /* ============================================
+     🔤 TYPOGRAPHY
+     ============================================ */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* Font Sizes */
   --font-size-xs: 11px;
   --font-size-sm: 12.5px;
   --font-size-base: 13.5px;
   --font-size-md: 15px;
   --font-size-lg: 18px;
   --font-size-xl: 25px;
+  --font-size-2xl: 32px;
+  --font-size-3xl: 40px;
+  --font-size-4xl: 52px;
+  --font-size-5xl: 68px;
 
-  /* ---------- Spacing ---------- */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 16px;
-  --space-lg: 24px;
-  --space-xl: 32px;
+  /* Font Weights */
+  --font-light: 300;
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
 
-  /* ---------- Motion ---------- */
+  /* Line Heights */
+  --leading-tight: 1.1;
+  --leading-snug: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* Letter Spacing */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+
+  /* ============================================
+     ⏱️ TRANSITIONS (MOTION)
+     ============================================ */
   --dur-fast: 120ms;
   --dur-base: 200ms;
+  --dur-slow: 350ms;
+  --dur-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ============================================
+     📦 Z-INDEX LAYERS
+     ============================================ */
+  --z-auto: auto;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+  --z-loader: 1090;
+  --z-max: 9999;
+
+  /* ============================================
+     📱 BREAKPOINTS
+     ============================================ */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* ============================================
+     🎨 GRID & CONTAINER
+     ============================================ */
+  --container-max: 1280px;
+  --container-padding: var(--space-lg);
+  --grid-gap: var(--space-lg);
 }

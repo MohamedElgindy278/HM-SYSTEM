@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { Eye, FilePenLine, CalendarClock } from 'lucide-react';
+
+import { Card, Badge, Button, Loading, Pagination } from '../../../components/ui';
 import { useTodayAppointments } from '../hooks/useDashboard';
-import Pagination from '../../../components/common/Pagination';
-import Loading from '../../../components/common/Loading';
+import { extractErrorMessage } from '../../../utils/errors';
 
 const PAGE_SIZE = 10;
 
 const STATUS_BADGE = {
-  Scheduled: 'b-info',
-  Completed: 'b-success',
-  Cancelled: 'b-danger',
+  Scheduled: 'info',
+  Completed: 'success',
+  Cancelled: 'danger',
+  Pending: 'warning',
 };
 
 function initials(name = '') {
@@ -32,7 +34,7 @@ function formatTime(dateString) {
 
 export default function TodayAppointments({ onAction }) {
   const [page, setPage] = useState(1);
-  const { data, loading, error } = useTodayAppointments(page, PAGE_SIZE);
+  const { data, isLoading, isError, error } = useTodayAppointments(page, PAGE_SIZE);
 
   const appointments = data?.items || [];
   const total = data?.total || 0;
@@ -41,18 +43,24 @@ export default function TodayAppointments({ onAction }) {
     <>
       <h2 className="section-title">Today's Appointments</h2>
 
-      <div className="card table-card">
+      <Card className="table-card" hoverable={false}>
         <div className="table-toolbar">
           <span className="table-title">
-            {loading ? "Today's Appointments" : `${total} appointments today`}
+            {isLoading ? "Today's Appointments" : `${total} appointments today`}
           </span>
+
+          <div className="table-tools">
+            <Button variant="outline" size="sm">
+              View All
+            </Button>
+          </div>
         </div>
 
         <div className="table-wrap">
-          {loading && <Loading label="Loading appointments..." />}
-          {error && <div className="empty-state error">{error}</div>}
+          {isLoading && <Loading label="Loading appointments..." />}
+          {isError && <div className="empty-state error">{extractErrorMessage(error)}</div>}
 
-          {!loading && !error && (
+          {!isLoading && !isError && (
             <table>
               <thead>
                 <tr>
@@ -89,32 +97,35 @@ export default function TodayAppointments({ onAction }) {
                       <td>{appt.doctor_name}</td>
 
                       <td>
-                        <span className={`badge ${STATUS_BADGE[appt.status] || 'b-info'}`}>
-                          <span className="bdot" />
-                          {appt.status}
-                        </span>
+                        <Badge tone={STATUS_BADGE[appt.status] || 'info'}>{appt.status}</Badge>
                       </td>
 
                       <td>
                         <div className="row-actions">
                           <button
+                            type="button"
                             className="icon-sm-btn"
                             onClick={() => onAction?.('view', appt.appointment_id)}
                             title="View"
+                            aria-label="View appointment"
                           >
                             <Eye size={17} />
                           </button>
                           <button
+                            type="button"
                             className="icon-sm-btn"
                             onClick={() => onAction?.('edit', appt.appointment_id)}
                             title="Edit"
+                            aria-label="Edit appointment"
                           >
                             <FilePenLine size={17} />
                           </button>
                           <button
+                            type="button"
                             className="icon-sm-btn"
                             onClick={() => onAction?.('reschedule', appt.appointment_id)}
                             title="Reschedule"
+                            aria-label="Reschedule appointment"
                           >
                             <CalendarClock size={17} />
                           </button>
@@ -128,10 +139,10 @@ export default function TodayAppointments({ onAction }) {
           )}
         </div>
 
-        {!loading && !error && total > 0 && (
+        {!isLoading && !isError && total > 0 && (
           <Pagination page={page} pageSize={PAGE_SIZE} total={total} onPageChange={setPage} />
         )}
-      </div>
+      </Card>
     </>
   );
 }

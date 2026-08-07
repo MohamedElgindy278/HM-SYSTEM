@@ -1,5 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import api from '../../../services/api';
+import { extractErrorMessage } from '../../../utils/errors';
 
 import AuthLayout from '../components/AuthLayout';
 import LoginForm from '../components/LoginForm';
@@ -8,7 +11,6 @@ import ForgotOTPForm from '../components/ForgotOTPForm';
 import ResetPasswordForm from '../components/ResetPasswordForm';
 
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 const AUTH_VIEW = {
   LOGIN: 'login',
@@ -18,10 +20,10 @@ const AUTH_VIEW = {
 };
 
 const RESEND_COOLDOWN_SECONDS = 30;
+const SUCCESS_REDIRECT_DELAY_MS = 600;
 
 export default function Login() {
   const navigate = useNavigate();
-
   const { login } = useAuth();
 
   const [authView, setAuthView] = useState(AUTH_VIEW.LOGIN);
@@ -36,14 +38,17 @@ export default function Login() {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [rememberMe, setRememberMe] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [errorMessage, setErrorMessage] = useState(null);
 
+  // "Signed in, redirecting..." banner shown briefly before navigating away
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // General-purpose success banner shown on the LOGIN view after a
+  // password reset completes (replaces the old alert() popup)
+  const [noticeMessage, setNoticeMessage] = useState(null);
 
   const [resendCooldown, setResendCooldown] = useState(0);
 
@@ -57,6 +62,12 @@ export default function Login() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
+  const switchView = (view) => {
+    setErrorMessage(null);
+    setNoticeMessage(null);
+    setAuthView(view);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -68,12 +79,13 @@ export default function Login() {
 
       setShowSuccess(true);
 
-      navigate('/dashboard', { replace: true });
+      // Small delay so the "signed in successfully" banner is actually
+      // visible for a moment before the page navigates away.
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, SUCCESS_REDIRECT_DELAY_MS);
     } catch (error) {
-      const message = error.message || 'Something went wrong. Please try again.';
-
-      setErrorMessage(message);
-
+      setErrorMessage(extractErrorMessage(error));
       setIsSubmitting(false);
     }
   };
@@ -85,16 +97,12 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      await api.post('/auth/forgot-password', {
-        email,
-      });
+      await api.post('/auth/forgot-password', { email });
 
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
       setAuthView(AUTH_VIEW.FORGOT_OTP);
     } catch (error) {
-      const message = error.message || 'Something went wrong. Please try again.';
-
-      setErrorMessage(message);
+      setErrorMessage(extractErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -109,9 +117,7 @@ export default function Login() {
       await api.post('/auth/forgot-password', { email });
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (error) {
-      const message = error.message || 'Something went wrong. Please try again.';
-
-      setErrorMessage(message);
+      setErrorMessage(extractErrorMessage(error));
     }
   };
 
@@ -122,16 +128,11 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
-      await api.post('/auth/verify-otp', {
-        email,
-        otp,
-      });
+      await api.post('/auth/verify-otp', { email, otp });
 
       setAuthView(AUTH_VIEW.RESET);
     } catch (error) {
-      const message = error.message || 'Invalid OTP.';
-
-      setErrorMessage(message);
+      setErrorMessage(extractErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
@@ -150,37 +151,36 @@ export default function Login() {
     setIsSubmitting(true);
 
     try {
+      // NOTE: `otp` is included here so the backend can confirm this
+      // reset request is tied to the OTP that was actually verified.
+      // If /auth/reset-password relies purely on a short-lived session
+      // set during /auth/verify-otp instead, this field is simply ignored
+      // server-side - safe either way.
       await api.post('/auth/reset-password', {
         email,
+        otp,
         new_password: newPassword,
       });
 
-      alert('Password changed successfully.');
-
       setUsername('');
       setPassword('');
-
       setEmail('');
       setOtp('');
-
       setNewPassword('');
       setConfirmPassword('');
-
       setRememberMe(false);
-
       setErrorMessage(null);
-
       setShowSuccess(false);
 
+      setNoticeMessage('Password changed successfully. Please sign in with your new password.');
       setAuthView(AUTH_VIEW.LOGIN);
     } catch (error) {
-      const message = error.message || 'Something went wrong.';
-
-      setErrorMessage(message);
+      setErrorMessage(extractErrorMessage(error));
     } finally {
       setIsSubmitting(false);
     }
   };
+
   return (
     <AuthLayout>
       {authView === AUTH_VIEW.LOGIN && (
@@ -195,9 +195,10 @@ export default function Login() {
           setShowPassword={setShowPassword}
           errorMessage={errorMessage}
           showSuccess={showSuccess}
+          noticeMessage={noticeMessage}
           isSubmitting={isSubmitting}
           handleSubmit={handleSubmit}
-          setAuthView={setAuthView}
+          setAuthView={switchView}
         />
       )}
 
@@ -208,7 +209,7 @@ export default function Login() {
           isSubmitting={isSubmitting}
           errorMessage={errorMessage}
           handleForgotPassword={handleForgotPassword}
-          setAuthView={setAuthView}
+          setAuthView={switchView}
         />
       )}
 
@@ -221,7 +222,7 @@ export default function Login() {
           handleVerifyOTP={handleVerifyOTP}
           handleResendOtp={handleResendOtp}
           resendCooldown={resendCooldown}
-          setAuthView={setAuthView}
+          setAuthView={switchView}
         />
       )}
 
@@ -234,7 +235,7 @@ export default function Login() {
           isSubmitting={isSubmitting}
           errorMessage={errorMessage}
           handleResetPassword={handleResetPassword}
-          setAuthView={setAuthView}
+          setAuthView={switchView}
         />
       )}
     </AuthLayout>

@@ -7,7 +7,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-xl); /* 28px ~= 32px */
+  padding: 0 var(--space-xl);
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--color-border);
@@ -74,7 +74,10 @@
 }
 
 /* ==========================================================
-   Center
+   Center — search box
+   (uses the shared <Input icon={Search}> component; the actual
+   input/icon styling lives in styles/components.css. Only
+   navbar-specific sizing/overrides live here.)
 ========================================================== */
 
 .navbar-center {
@@ -83,47 +86,20 @@
   justify-content: center;
 }
 
-.search-box {
+.navbar-center .form-group {
   width: 100%;
   max-width: 520px;
-  position: relative;
+  margin-bottom: 0;
 }
 
-.search-icon {
-  position: absolute;
-  left: var(--space-md);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--color-muted);
-  pointer-events: none;
-}
-
-.search-box input {
-  width: 100%;
+.navbar-search-input {
   height: 46px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
   background: var(--color-bg);
-  padding-left: 48px;
-  padding-right: var(--space-md);
-  outline: none;
-  font-family: var(--font-family);
-  font-size: var(--font-size-base);
-  color: var(--color-title);
-  transition:
-    background var(--dur-base) ease,
-    border-color var(--dur-fast) ease,
-    box-shadow var(--dur-fast) ease;
+  border-radius: var(--radius-md);
 }
 
-.search-box input::placeholder {
-  color: var(--color-muted);
-}
-
-.search-box input:focus {
+.navbar-search-input:focus {
   background: var(--color-surface);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
 /* ==========================================================
@@ -141,13 +117,13 @@
 ========================================================== */
 
 @media (max-width: 1366px) {
-  .search-box {
+  .navbar-center .form-group {
     max-width: 380px;
   }
 }
 
 @media (max-width: 1024px) {
-  .search-box {
+  .navbar-center .form-group {
     max-width: 300px;
   }
 
@@ -168,7 +144,7 @@
     display: none;
   }
 
-  .search-box {
+  .navbar-center {
     display: none;
   }
 

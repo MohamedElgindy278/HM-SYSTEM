@@ -22,8 +22,6 @@ from src.schemas.auth_schema import (
 )
 from src.utils.email_service import EmailService
 
-# Precomputed once at import time — keeps login response timing
-# constant whether or not the username exists
 _DUMMY_HASH = hash_password("dummy-password-for-timing-safety")
 
 

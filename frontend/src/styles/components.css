@@ -1,3 +1,12 @@
+/* ==========================================================================
+   SHARED UI PRIMITIVES
+   Every reusable, page-agnostic class lives here: buttons, inputs, cards,
+   tables, badges, empty states. Standalone widgets with their own layout
+   (Loading, Pagination, ConfirmDialog) keep their own co-located CSS file
+   instead of living here. Pages only add layout that is truly specific to
+   them (e.g. Dashboard.css keeps its chart cards).
+   ========================================================================== */
+
 * {
   box-sizing: border-box;
 }
@@ -301,46 +310,48 @@ tbody tr:hover {
 }
 
 /* ==========================================================
-   Pagination
+   Checkbox
    ========================================================== */
-.pagination {
-  display: flex;
+.checkbox-wrap {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px;
-  border-top: 1px solid var(--color-border);
-  font-size: var(--font-size-sm);
-  color: var(--color-muted);
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.pagination-btn {
-  height: 30px;
-  padding: 0 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  color: var(--color-text);
+  gap: 9px;
   cursor: pointer;
-  font-family: var(--font-family);
+  user-select: none;
 }
-.pagination-btn:hover:not(:disabled) {
-  background: var(--color-bg);
+.checkbox-input {
+  display: none;
 }
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.checkbox-box {
+  width: 19px;
+  height: 19px;
+  border-radius: var(--radius-sm);
+  border: 1.6px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    background var(--dur-fast) ease,
+    border-color var(--dur-fast) ease;
 }
-.pagination-page {
-  font-weight: 600;
-  color: var(--color-title);
+.checkbox-input:checked + .checkbox-box {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.checkbox-input:checked + .checkbox-box::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+.checkbox-label {
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  font-weight: 500;
 }
 
 /* ==========================================================
@@ -369,4 +380,64 @@ tbody tr:hover {
 .grid {
   display: grid;
   gap: 18px;
+}
+
+/* ==========================================================
+   Spin animation (used by Button's loading spinner)
+   ========================================================== */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.btn-spin {
+  animation: spin 0.7s linear infinite;
+}
+
+/* ==========================================================
+   Input with leading icon (e.g. search boxes)
+   ========================================================== */
+.input-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--color-muted);
+  pointer-events: none;
+}
+.input-with-icon {
+  padding-left: 36px;
+}
+
+/* ==========================================================
+   Password input (used by PasswordInput.jsx)
+   ========================================================== */
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.password-input {
+  padding-right: 42px;
+}
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  padding: 6px;
+  display: flex;
+  cursor: pointer;
+  color: var(--color-muted);
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--dur-fast) ease,
+    background var(--dur-fast) ease;
+}
+.password-toggle-btn:hover {
+  color: var(--color-primary);
+  background: var(--color-info-bg);
 }

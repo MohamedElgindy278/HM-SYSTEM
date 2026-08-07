@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import api from '../../../services/api';
+import { extractErrorMessage } from '../../../utils/errors';
 
 const AuthContext = createContext(null);
 
@@ -37,7 +38,7 @@ export function AuthProvider({ children }) {
       password,
       remember_me: rememberMe,
     });
-    console.log(response);
+
     const { access_token, refresh_token } = response.data;
 
     localStorage.setItem('access_token', access_token);
@@ -61,9 +62,11 @@ export function AuthProvider({ children }) {
   };
 
   const forgotPassword = async (email) => {
-    return await api.post('/auth/forgot-password', {
-      email,
-    });
+    try {
+      return await api.post('/auth/forgot-password', { email });
+    } catch (err) {
+      throw new Error(extractErrorMessage(err));
+    }
   };
 
   const hasPermission = (permissionName) => {

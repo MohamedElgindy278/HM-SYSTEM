@@ -1,45 +1,86 @@
-import { useApiQuery } from '../../../hooks/useApiQuery';
+import { useQuery } from '@tanstack/react-query';
 import { dashboardApi } from '../api/dashboardApi';
+import { dashboardKeys } from '../api/queryKeys';
+
+/** يفك الـ envelope ويرجع data فقط */
+const selectData = (response) => response?.data ?? response;
 
 export function useDashboardStats() {
-  return useApiQuery(() => dashboardApi.getStats(), []);
+  return useQuery({
+    queryKey: dashboardKeys.stats(),
+    queryFn: () => dashboardApi.getStats(),
+    select: selectData,
+  });
 }
 
 export function useHospitalStatus() {
-  return useApiQuery(() => dashboardApi.getHospitalStatus(), []);
+  return useQuery({
+    queryKey: dashboardKeys.hospitalStatus(),
+    queryFn: () => dashboardApi.getHospitalStatus(),
+    select: selectData,
+  });
 }
 
-export function useTodayAppointments(startNum = 1, pageSize = 10) {
-  return useApiQuery(
-    () => dashboardApi.getTodayAppointments(startNum, pageSize),
-    [startNum, pageSize]
-  );
+export function useTodayAppointments(page = 1, pageSize = 10) {
+  return useQuery({
+    queryKey: dashboardKeys.todayAppointments(page, pageSize),
+    queryFn: () => dashboardApi.getTodayAppointments(page, pageSize),
+    select: selectData,
+  });
 }
 
 export function useRecentActivity(limit = 10) {
-  return useApiQuery(() => dashboardApi.getRecentActivity(limit), [limit]);
+  return useQuery({
+    queryKey: dashboardKeys.recentActivity(limit),
+    queryFn: () => dashboardApi.getRecentActivity(limit),
+    select: selectData,
+  });
 }
 
 export function usePatientGrowth(period = 'month') {
-  return useApiQuery(() => dashboardApi.getPatientGrowth(period), [period]);
+  return useQuery({
+    queryKey: dashboardKeys.patientGrowth(period),
+    queryFn: () => dashboardApi.getPatientGrowth(period),
+    select: selectData,
+  });
 }
 
 export function useRevenueAnalytics(period = 'month') {
-  return useApiQuery(() => dashboardApi.getRevenueAnalytics(period), [period]);
+  return useQuery({
+    queryKey: dashboardKeys.revenue(period),
+    queryFn: () => dashboardApi.getRevenueAnalytics(period),
+    select: selectData,
+  });
 }
 
 export function useAppointmentsAnalytics(period = 'month') {
-  return useApiQuery(() => dashboardApi.getAppointmentsAnalytics(period), [period]);
+  return useQuery({
+    queryKey: dashboardKeys.appointmentsAnalytics(period),
+    queryFn: () => dashboardApi.getAppointmentsAnalytics(period),
+    select: selectData,
+  });
 }
 
 export function useDepartmentDistribution() {
-  return useApiQuery(() => dashboardApi.getDepartmentDistribution(), []);
+  return useQuery({
+    queryKey: dashboardKeys.departmentDistribution(),
+    queryFn: () => dashboardApi.getDepartmentDistribution(),
+    select: selectData,
+  });
 }
 
 export function useBedOccupancy(period = 'month') {
-  return useApiQuery(() => dashboardApi.getBedOccupancy(period), [period]);
+  return useQuery({
+    queryKey: dashboardKeys.bedOccupancy(period),
+    queryFn: () => dashboardApi.getBedOccupancy(period),
+    select: selectData,
+  });
 }
 
 export function useAdmissionsAnalytics(period = 'month') {
-  return useApiQuery(() => dashboardApi.getAdmissionsAnalytics(period), [period]);
+  return useQuery({
+    queryKey: dashboardKeys.admissions(period),
+    queryFn: () => dashboardApi.getAdmissionsAnalytics(period),
+    select: selectData,
+  });
 }

@@ -5,9 +5,9 @@ export const dashboardApi = {
 
   getHospitalStatus: () => api.get('/dashboard/hospital-status'),
 
-  getTodayAppointments: (startNum = 1, pageSize = 10) =>
+  getTodayAppointments: (page = 1, pageSize = 10) =>
     api.get('/dashboard/today-appointments', {
-      params: { start_num: startNum, page_size: pageSize },
+      params: { start_num: page, page_size: pageSize },
     }),
 
   getRecentActivity: (limit = 5) => api.get('/dashboard/recent-activity', { params: { limit } }),

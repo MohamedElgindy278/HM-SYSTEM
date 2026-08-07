@@ -1,6 +1,8 @@
 import { UserPlus, CalendarPlus, BedDouble, ClipboardPlus, Pill, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { Button } from '../../../components/ui';
+
 const ACTIONS = [
   { title: 'Add Patient', Icon: UserPlus, path: '/patients/create' },
   { title: 'New Appointment', Icon: CalendarPlus, path: '/appointments/create' },
@@ -19,12 +21,15 @@ export default function QuickActions() {
 
       <section className="grid grid-actions">
         {ACTIONS.map(({ title, Icon, path }) => (
-          <button key={title} type="button" className="action-card" onClick={() => navigate(path)}>
-            <div className="action-icon">
-              <Icon size={22} />
-            </div>
+          <Button
+            key={title}
+            variant="outline"
+            className="action-card"
+            onClick={() => navigate(path)}
+            icon={Icon}
+          >
             <span className="action-label">{title}</span>
-          </button>
+          </Button>
         ))}
       </section>
     </>
